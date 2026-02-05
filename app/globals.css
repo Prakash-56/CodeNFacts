@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+/* Your custom global styles */
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: radial-gradient(
+    circle 1200px at 10% 10%,
+    #1b1f3b,
+    #05060f 60%
+  );
+  color: #ffffff;
+  font-family: sans-serif;
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+/* ENGINEERED GRID */
+.bg-grid {
+  background-image:
+    linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 1px
+    );
+  background-size: 60px 60px;
+  transform: translate(
+    calc(var(--mx, 0px) * 0.15),
+    calc(var(--my, 0px) * 0.15)
+  );
+  transition: transform 0.2s linear;
+  opacity: 0.4;
+}
+
+/* LIGHT ORBS */
+.orb {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.25;
+  mix-blend-mode: screen;
+  transform: translate(
+    calc(var(--mx, 0px) * 0.4),
+    calc(var(--my, 0px) * 0.4)
+  );
+}
+
+.orb-1 {
+  top: -20%;
+  left: -10%;
+  background: radial-gradient(circle, #4f46e5, transparent 70%);
+}
+
+.orb-2 {
+  bottom: -25%;
+  right: -10%;
+  background: radial-gradient(circle, #22d3ee, transparent 70%);
+}
+
+.orb-3 {
+  top: 30%;
+  right: 20%;
+  background: radial-gradient(circle, #9333ea, transparent 70%);
+}
+.input {
+  width: 100%;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  padding: 1.25rem 1.5rem;
+  font-size: 1.05rem;
+  color: white;
+  outline: none;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
+.input:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 4px rgba(99,102,241,0.2);
+}
+.font-outline-white {
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+  color: transparent;
+}

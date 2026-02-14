@@ -2,7 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase/client';
+import { auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface ApplyPageProps {
   params: { slug: string };
@@ -11,7 +14,7 @@ interface ApplyPageProps {
 export default function ApplyPage({ params }: ApplyPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const price = searchParams.get('price') || '0'; // price from query
+  const price = searchParams.get('price') || '0';
 
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -30,16 +33,34 @@ export default function ApplyPage({ params }: ApplyPageProps) {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { username, course: params.slug, price } },
-    });
+    try {
+      // Create user
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-    if (error) setError(error.message);
-    else {
+      const user = userCredential.user;
+
+      // Set display name
+      await updateProfile(user, {
+        displayName: username,
+      });
+
+      // Save extra data in Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        username,
+        email,
+        course: params.slug,
+        price,
+        createdAt: serverTimestamp(),
+      });
+
       alert(`Signup successful for ${params.slug}! Price: ₹${price}`);
       router.push('/');
+    } catch (err: any) {
+      setError(err.message);
     }
 
     setLoading(false);
@@ -66,6 +87,7 @@ export default function ApplyPage({ params }: ApplyPageProps) {
           className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
+
         <input
           type="email"
           placeholder="Email"
@@ -74,6 +96,7 @@ export default function ApplyPage({ params }: ApplyPageProps) {
           className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
+
         <input
           type="password"
           placeholder="Password (min 8 chars)"

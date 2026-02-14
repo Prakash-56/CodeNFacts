@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 
 export default function Terms() {
   const [isVisible, setIsVisible] = useState(false);
@@ -10,7 +10,7 @@ export default function Terms() {
     setIsVisible(true);
   }, []);
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -21,7 +21,7 @@ export default function Terms() {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 30, scale: 0.95 },
     visible: {
       opacity: 1,
@@ -34,20 +34,21 @@ export default function Terms() {
     }
   };
 
-  const sectionVariants = {
+  const sectionVariants: Variants = {
     hidden: { opacity: 0, height: 0 },
     visible: {
       opacity: 1,
       height: 'auto',
       transition: {
         duration: 0.5,
-        ease: 'easeOut'
+        ease: [0.4, 0, 0.2, 1]
       }
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white overflow-hidden">
+      
       {/* Animated Background */}
       <div className="fixed inset-0 opacity-20">
         <div className="absolute inset-0 bg-grid-white/5 [background-size:100px_100px] animate-pulse" />
@@ -56,6 +57,8 @@ export default function Terms() {
       </div>
 
       <div className="relative z-10 px-6 py-20 max-w-5xl mx-auto">
+        
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -71,11 +74,12 @@ export default function Terms() {
             transition={{ 
               duration: 3,
               repeat: Infinity,
-              ease: 'easeInOut'
+              ease: [0.4, 0, 0.2, 1]
             }}
           >
             Terms & Conditions
           </motion.h1>
+
           <motion.p 
             className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto leading-relaxed"
             initial={{ opacity: 0 }}
@@ -86,6 +90,7 @@ export default function Terms() {
           </motion.p>
         </motion.div>
 
+        {/* Content */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -94,8 +99,7 @@ export default function Terms() {
         >
           {/* Section 1 */}
           <motion.section variants={sectionVariants}>
-            <motion.h2 
-              variants={itemVariants}
+            <motion.h2 variants={itemVariants}
               className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-6 flex items-center gap-4"
             >
               <span className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-xl font-bold shadow-2xl">
@@ -103,8 +107,7 @@ export default function Terms() {
               </span>
               Course Access & Usage
             </motion.h2>
-            <motion.div 
-              variants={itemVariants}
+            <motion.div variants={itemVariants}
               className="space-y-6 text-gray-300 leading-relaxed text-lg"
             >
               <p>Access to courses is granted immediately upon successful payment confirmation via our secure payment gateway.</p>
@@ -119,8 +122,7 @@ export default function Terms() {
 
           {/* Section 2 */}
           <motion.section variants={sectionVariants}>
-            <motion.h2 
-              variants={itemVariants}
+            <motion.h2 variants={itemVariants}
               className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-6 flex items-center gap-4"
             >
               <span className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-xl font-bold shadow-2xl">
@@ -128,8 +130,7 @@ export default function Terms() {
               </span>
               Intellectual Property Rights
             </motion.h2>
-            <motion.div 
-              variants={itemVariants}
+            <motion.div variants={itemVariants}
               className="space-y-6 text-gray-300 leading-relaxed text-lg"
             >
               <p>All course content, including videos, code samples, documents, and graphics, is protected by Indian copyright laws and international treaties.</p>
@@ -144,8 +145,7 @@ export default function Terms() {
 
           {/* Section 3 */}
           <motion.section variants={sectionVariants}>
-            <motion.h2 
-              variants={itemVariants}
+            <motion.h2 variants={itemVariants}
               className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-6 flex items-center gap-4"
             >
               <span className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center text-xl font-bold shadow-2xl">
@@ -153,8 +153,7 @@ export default function Terms() {
               </span>
               Refund & Cancellation Policy
             </motion.h2>
-            <motion.div 
-              variants={itemVariants}
+            <motion.div variants={itemVariants}
               className="space-y-6 text-gray-300 leading-relaxed text-lg"
             >
               <p>All sales are final. No refunds will be issued after course access is granted.</p>
@@ -169,8 +168,7 @@ export default function Terms() {
 
           {/* Section 4 */}
           <motion.section variants={sectionVariants}>
-            <motion.h2 
-              variants={itemVariants}
+            <motion.h2 variants={itemVariants}
               className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-6 flex items-center gap-4"
             >
               <span className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl flex items-center justify-center text-xl font-bold shadow-2xl">
@@ -178,8 +176,7 @@ export default function Terms() {
               </span>
               Liability & Disclaimers
             </motion.h2>
-            <motion.div 
-              variants={itemVariants}
+            <motion.div variants={itemVariants}
               className="space-y-6 text-gray-300 leading-relaxed text-lg"
             >
               <p>CodeNFacts provides educational content "as is" without warranties of any kind.</p>
@@ -192,28 +189,6 @@ export default function Terms() {
             </motion.div>
           </motion.section>
 
-          {/* Final CTA */}
-          <motion.div 
-            variants={itemVariants}
-            className="text-center pt-16 border-t-2 border-gray-800"
-          >
-            <motion.p 
-              className="text-xl text-gray-400 mb-8"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              Last updated: February 13, 2026
-            </motion.p>
-            <motion.div
-              className="inline-flex items-center gap-4 p-6 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-700"
-              whileHover={{ scale: 1.02, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <span className="text-2xl">🤝</span>
-              <span className="font-semibold text-lg">By using our platform, you agree to these terms</span>
-            </motion.div>
-          </motion.div>
         </motion.div>
       </div>
 
@@ -230,7 +205,7 @@ export default function Terms() {
         .animation-delay-2000 {
           animation-delay: 2s;
         }
-        .bg-grid-white\/5 {
+        .bg-grid-white\\/5 {
           background-image: 
             linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
             linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);

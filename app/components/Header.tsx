@@ -12,8 +12,9 @@ import {
   Info,
   HelpCircle,
 } from "lucide-react";
-import { User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase/client";
+
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -28,34 +29,24 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  /* ---------------- Auth Session ---------------- */
+  /* ---------------- Firebase Auth Session ---------------- */
   useEffect(() => {
-    const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setUser(data.session?.user ?? null);
-    };
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+    });
 
-    getSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
   /* ---------------- Handlers ---------------- */
   const handleAuthClick = () => {
     setOpen(false);
-    router.push("/signup");
+    router.push("/login");
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut(auth);
+    setUser(null);
     setOpen(false);
     router.push("/");
   };
@@ -198,4 +189,3 @@ export default function Header() {
     </>
   );
 }
-

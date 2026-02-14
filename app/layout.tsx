@@ -2,6 +2,7 @@ import './globals.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import PageTransition from './components/PageTransition';
+import Script from 'next/script';
 
 export const metadata = {
   title: {
@@ -87,6 +88,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased bg-black text-white">
+        {/* Cashfree SDK */}
+        <Script
+          src="https://sdk.cashfree.com/js/v3/cashfree.js"
+          strategy="afterInteractive"
+        />
+
         <Header />
         <PageTransition>{children}</PageTransition>
         <Footer />

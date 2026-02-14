@@ -18,7 +18,7 @@ const reasons = [
   },
   {
     title: 'Guidance Beats Motivation',
-    desc: 'Discipline comes from clarity — not hype.',
+    desc: 'Discipline comes from clarity - not hype.',
   },
 ];
 

@@ -48,7 +48,7 @@ export async function POST(req: Request) {
 
     // Create order in Cashfree
     const cashfreeResponse = await fetch(
-      "https://sandbox.cashfree.com/pg/orders",
+      "https://api.cashfree.com/pg/orders",
       {
         method: "POST",
         headers: {

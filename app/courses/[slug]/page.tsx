@@ -278,7 +278,7 @@ function ProjectCard({
   idx,
   color,
 }: {
-  proj: Project;
+  proj: ProjectItem;
   idx: number;
   color: string;
 }) {

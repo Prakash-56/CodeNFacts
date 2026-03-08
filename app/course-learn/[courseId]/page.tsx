@@ -1182,7 +1182,7 @@ function CoursePlayer({ courseId, courseData, router }: {
   const [activeTab, setActiveTab]               = useState<'overview'|'resources'|'notes'>('overview')
   const [celebrating, setCelebrating]           = useState(false)
 
-  const currentLesson = lessons[activeLesson] ?? {}
+  const currentLesson: LessonMeta = lessons[activeLesson];
   const progress = completedLessons.size===0 ? 0 : Math.round((completedLessons.size/lessons.length)*100)
 
   const currentSection = (()=>{

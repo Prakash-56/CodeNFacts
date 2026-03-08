@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect, useRef } from "react";
 import { courses } from "@/data/courses";
+import { Course } from "@/types/course"
 import { notFound } from "next/navigation";
 import {
   motion,
@@ -303,7 +304,7 @@ function ProjectCard({ proj, idx, color }: {
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function CourseDetail({ params }: PageProps) {
   const { slug } = use(params);
-  const course = courses.find((c) => c.slug === slug);
+  const course: Course | undefined = courses.find((c) => c.slug === slug);
   if (!course) return notFound();
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -322,8 +323,8 @@ export default function CourseDetail({ params }: PageProps) {
     return () => window.removeEventListener("mousemove", onMove);
   }, []);
 
-  const majorProjects = (course.projects || []).filter((p: any) => p.type === "major");
-  const minorProjects = (course.projects || []).filter((p: any) => p.type === "minor");
+const majorProjects = (course.projects || []).filter((p) => p.type === "major");
+const minorProjects = (course.projects || []).filter((p) => p.type === "minor");
   const allProjects = [...majorProjects, ...minorProjects];
 
   return (
@@ -556,7 +557,7 @@ export default function CourseDetail({ params }: PageProps) {
               <section id="curriculum">
                 <SectionLabel icon={<Layers className="w-4 h-4" />} label="Full Curriculum" color={accentColor} />
                 <div className="space-y-3">
-                  {(course.syllabus || []).map((mod: any, i: number) => (
+                  {(course.syllabus || []).map((mod, i) => (
                     <ModuleAccordion key={i} module={mod} idx={i} color={accentColor} />
                   ))}
                 </div>
@@ -576,7 +577,7 @@ export default function CourseDetail({ params }: PageProps) {
                   </span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {allProjects.map((proj: any, i: number) => (
+                  {allProjects.map((proj, i) => (
                     <ProjectCard key={i} proj={proj} idx={i} color={accentColor} />
                   ))}
                 </div>

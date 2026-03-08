@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import confetti from "canvas-confetti";
@@ -10,10 +10,11 @@ import {
   AnimatePresence,
   useMotionValue,
   useSpring,
-  useTransform
+  useTransform,
 } from "framer-motion";
 
-export default function PaymentStatusPage() {
+// ─── INNER COMPONENT (uses useSearchParams — must be inside Suspense) ─────────
+function PaymentStatusInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -32,7 +33,7 @@ export default function PaymentStatusPage() {
   const springX = useSpring(rotateX, { stiffness: 120, damping: 20 });
   const springY = useSpring(rotateY, { stiffness: 120, damping: 20 });
 
-  const handleMouseMove = (e: any) => {
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     mouseX.set(e.clientX - rect.left - rect.width / 2);
     mouseY.set(e.clientY - rect.top - rect.height / 2);
@@ -44,21 +45,9 @@ export default function PaymentStatusPage() {
     const end = Date.now() + duration;
 
     const frame = () => {
-      confetti({
-        particleCount: 4,
-        angle: 60,
-        spread: 70,
-        origin: { x: 0 }
-      });
-      confetti({
-        particleCount: 4,
-        angle: 120,
-        spread: 70,
-        origin: { x: 1 }
-      });
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
+      confetti({ particleCount: 4, angle: 60, spread: 70, origin: { x: 0 } });
+      confetti({ particleCount: 4, angle: 120, spread: 70, origin: { x: 1 } });
+      if (Date.now() < end) requestAnimationFrame(frame);
     };
     frame();
   };
@@ -76,11 +65,7 @@ export default function PaymentStatusPage() {
         const res = await fetch("/api/verify-payment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orderId,
-            userId: user.uid,
-            courseId
-          }),
+          body: JSON.stringify({ orderId, userId: user.uid, courseId }),
         });
 
         const data = await res.json();
@@ -91,12 +76,7 @@ export default function PaymentStatusPage() {
         if (data.success) {
           setStatus("success");
           fireConfetti();
-
-          // 🎯 REDIRECT TO THE SPECIFIC BATCH
-          setTimeout(() => {
-            router.push(`/my-batch/`);
-          }, 3500);
-
+          setTimeout(() => router.push("/my-batch/"), 3500);
         } else {
           setStatus("failed");
         }
@@ -107,21 +87,22 @@ export default function PaymentStatusPage() {
     });
 
     const timeout = setTimeout(() => {
-      setStatus((prev) => prev === "checking" ? "failed" : prev);
-    }, 12000); // Increased slightly for slower network verification
+      setStatus((prev) => (prev === "checking" ? "failed" : prev));
+    }, 12000);
 
     return () => {
       unsubscribe();
       clearTimeout(timeout);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, courseId, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-black text-white">
-      {/* holographic grid background */}
+      {/* Holographic grid background */}
       <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:60px_60px]" />
 
-      {/* glow orbs */}
+      {/* Glow orbs */}
       <motion.div
         animate={{ y: [0, -80, 0] }}
         transition={{ duration: 12, repeat: Infinity }}
@@ -133,7 +114,7 @@ export default function PaymentStatusPage() {
         className="absolute w-[500px] h-[500px] bg-cyan-500/20 blur-[140px] rounded-full bottom-[-200px] right-[-150px]"
       />
 
-      {/* glass card */}
+      {/* Glass card */}
       <motion.div
         onMouseMove={handleMouseMove}
         style={{ rotateX: springX, rotateY: springY }}
@@ -157,9 +138,7 @@ export default function PaymentStatusPage() {
                 transition={{ repeat: Infinity, duration: 1.8, ease: "linear" }}
                 className="w-20 h-20 border-4 border-cyan-400 border-t-transparent rounded-full mx-auto"
               />
-              <p className="text-yellow-400 text-lg">
-                Verifying with Cashfree...
-              </p>
+              <p className="text-yellow-400 text-lg">Verifying with Cashfree...</p>
             </motion.div>
           )}
 
@@ -184,12 +163,8 @@ export default function PaymentStatusPage() {
                   🎉
                 </motion.div>
               </div>
-              <p className="text-green-400 text-2xl font-semibold">
-                Welcome to the Batch!
-              </p>
-              <p className="text-gray-300 text-sm italic">
-                Taking you to your course content...
-              </p>
+              <p className="text-green-400 text-2xl font-semibold">Welcome to the Batch!</p>
+              <p className="text-gray-300 text-sm italic">Taking you to your course content...</p>
             </motion.div>
           )}
 
@@ -207,9 +182,7 @@ export default function PaymentStatusPage() {
               >
                 ❌
               </motion.div>
-              <p className="text-red-400 text-xl font-semibold">
-                Payment Verification Failed
-              </p>
+              <p className="text-red-400 text-xl font-semibold">Payment Verification Failed</p>
               <p className="text-gray-400 text-xs mb-4">
                 If the amount was deducted, please contact support.
               </p>
@@ -226,5 +199,23 @@ export default function PaymentStatusPage() {
         </AnimatePresence>
       </motion.div>
     </div>
+  );
+}
+
+// ─── LOADING FALLBACK ─────────────────────────────────────────────────────────
+function PaymentStatusLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <div className="w-20 h-20 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
+
+// ─── OUTER PAGE — wraps inner in Suspense (required by Next.js for useSearchParams) ──
+export default function PaymentStatusPage() {
+  return (
+    <Suspense fallback={<PaymentStatusLoading />}>
+      <PaymentStatusInner />
+    </Suspense>
   );
 }

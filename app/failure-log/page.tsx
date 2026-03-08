@@ -173,7 +173,10 @@ function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   const [vis, setVis] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVis(true); obs.disconnect(); } }, { threshold: 0.06 });
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVis(true); obs.disconnect(); } },
+      { threshold: 0.06 }
+    );
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
   }, []);
@@ -203,10 +206,16 @@ function Typewriter({ text, speed = 24 }: { text: string; speed?: number }) {
   const [out, setOut] = useState("");
   useEffect(() => {
     let i = 0;
-    const t = setInterval(() => { if (i <= text.length) { setOut(text.slice(0, i)); i++; } else clearInterval(t); }, speed);
+    const t = setInterval(() => {
+      if (i <= text.length) { setOut(text.slice(0, i)); i++; }
+      else clearInterval(t);
+    }, speed);
     return () => clearInterval(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  return <>{out}<span style={{ animation: "blink 1s step-start infinite", opacity: out.length < text.length ? 1 : 0 }}>|</span></>;
+  return (
+    <>{out}<span style={{ animation: "blink 1s step-start infinite", opacity: out.length < text.length ? 1 : 0 }}>|</span></>
+  );
 }
 
 // ─── CARD ─────────────────────────────────────────────────────────────────────
@@ -225,9 +234,7 @@ function IncidentCard({ f, idx, onOpen }: { f: typeof FAILURES[0]; idx: number; 
           cursor: "pointer",
           padding: "26px 28px 22px",
           position: "relative",
-          boxShadow: hov
-            ? `5px 5px 0 ${C.ink}`
-            : `2px 2px 0 ${C.rule}`,
+          boxShadow: hov ? `5px 5px 0 ${C.ink}` : `2px 2px 0 ${C.rule}`,
           transform: hov ? "translate(-2px,-2px)" : "translate(0,0)",
           transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)",
           overflow: "hidden",
@@ -293,8 +300,7 @@ function IncidentCard({ f, idx, onOpen }: { f: typeof FAILURES[0]; idx: number; 
           {f.tags.map(t => (
             <span key={t} style={{
               fontFamily: "'Courier New', monospace", fontSize: 9.5, letterSpacing: 2,
-              color: C.faded, border: `1px solid ${C.rule}`,
-              padding: "2px 8px",
+              color: C.faded, border: `1px solid ${C.rule}`, padding: "2px 8px",
             }}>{t}</span>
           ))}
         </div>
@@ -336,30 +342,39 @@ function IncidentCard({ f, idx, onOpen }: { f: typeof FAILURES[0]; idx: number; 
 // ─── MODAL ────────────────────────────────────────────────────────────────────
 function IncidentModal({ f, onClose }: { f: typeof FAILURES[0]; onClose: () => void }) {
   const [vis, setVis] = useState(false);
+
   useEffect(() => {
     setVis(true);
     document.body.style.overflow = "hidden";
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
     window.addEventListener("keydown", esc);
-    return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", esc); };
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", esc);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   const close = () => { setVis(false); setTimeout(onClose, 350); };
 
   return (
-    <div onClick={close} style={{
-      position: "fixed", inset: 0, zIndex: 9999,
-      display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
-      background: `rgba(14,12,9,${vis ? 0.72 : 0})`,
-      backdropFilter: `blur(${vis ? 5 : 0}px)`,
-      transition: "all 0.35s ease",
-    }}>
+    <div
+      onClick={close}
+      style={{
+        position: "fixed", inset: 0, zIndex: 9999,
+        display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+        background: `rgba(14,12,9,${vis ? 0.72 : 0})`,
+        backdropFilter: `blur(${vis ? 5 : 0}px)`,
+        transition: "all 0.35s ease",
+      }}
+    >
       <div
         onClick={e => e.stopPropagation()}
         style={{
           width: "100%", maxWidth: 740,
           maxHeight: "92vh", overflowY: "auto",
           background: C.paper,
-          borderTop: `6px solid ${f.accentColor}`,
+          // FIX: removed duplicate borderTop — use border shorthand then override borderTop once
           border: `1px solid ${C.rule}`,
           borderTop: `6px solid ${f.accentColor}`,
           boxShadow: `10px 10px 0 ${C.ink}`,
@@ -379,19 +394,27 @@ function IncidentModal({ f, onClose }: { f: typeof FAILURES[0]; onClose: () => v
                 <span style={{ fontFamily: "'Special Elite', serif", fontSize: 10, letterSpacing: 3, color: f.accentColor }}>{f.classification}</span>
               </div>
             </div>
-            <button onClick={close} style={{
-              background: C.ink, color: C.paper, border: "none",
-              width: 30, height: 30, cursor: "pointer", fontSize: 16,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "background 0.15s",
-            }}
+            <button
+              onClick={close}
+              style={{
+                background: C.ink, color: C.paper, border: "none",
+                width: 30, height: 30, cursor: "pointer", fontSize: 16,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "background 0.15s",
+              }}
               onMouseEnter={e => (e.currentTarget.style.background = f.accentColor)}
               onMouseLeave={e => (e.currentTarget.style.background = C.ink)}
             >×</button>
           </div>
 
-          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(20px,3.5vw,32px)", fontWeight: 900, color: C.ink, lineHeight: 1.2, marginBottom: 8 }}>{f.title}</h2>
-          <p style={{ fontFamily: "'Courier New', monospace", fontSize: 12.5, color: C.faded, fontStyle: "italic", marginBottom: 16 }}>{f.subtitle}</p>
+          <h2 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: "clamp(20px,3.5vw,32px)", fontWeight: 900,
+            color: C.ink, lineHeight: 1.2, marginBottom: 8,
+          }}>{f.title}</h2>
+          <p style={{ fontFamily: "'Courier New', monospace", fontSize: 12.5, color: C.faded, fontStyle: "italic", marginBottom: 16 }}>
+            {f.subtitle}
+          </p>
 
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
             {[["Author", f.author], ["Role", f.role], ["Date", f.caseDate], ["Downtime", f.duration], ["Severity", f.severity]].map(([k, v]) => (
@@ -418,7 +441,9 @@ function IncidentModal({ f, onClose }: { f: typeof FAILURES[0]; onClose: () => v
             position: "relative", marginBottom: 28,
           }}>
             <div style={{ position: "absolute", left: 34, top: 0, bottom: 0, width: 2, background: "rgba(192,57,43,0.12)" }} />
-            <p style={{ fontFamily: "'Courier New', monospace", fontSize: 13.5, lineHeight: "28px", color: C.ink2, whiteSpace: "pre-line" }}>{f.story}</p>
+            <p style={{ fontFamily: "'Courier New', monospace", fontSize: 13.5, lineHeight: "28px", color: C.ink2, whiteSpace: "pre-line" }}>
+              {f.story}
+            </p>
           </div>
 
           {/* Lesson */}
@@ -436,7 +461,10 @@ function IncidentModal({ f, onClose }: { f: typeof FAILURES[0]; onClose: () => v
           </div>
 
           {/* Impact */}
-          <div style={{ padding: "12px 16px", background: "rgba(0,0,0,0.04)", border: `1px dashed ${C.rule}`, display: "flex", gap: 12, marginBottom: 20 }}>
+          <div style={{
+            padding: "12px 16px", background: "rgba(0,0,0,0.04)",
+            border: `1px dashed ${C.rule}`, display: "flex", gap: 12, marginBottom: 20,
+          }}>
             <span style={{ fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: 2, color: C.faded, whiteSpace: "nowrap", paddingTop: 2 }}>IMPACT:</span>
             <span style={{ fontFamily: "'Courier New', monospace", fontSize: 13, color: C.ink2, lineHeight: 1.6 }}>{f.impact}</span>
           </div>
@@ -467,41 +495,31 @@ export default function FailureLog() {
 
   const filtered = cat === "ALL CASES"
     ? FAILURES
-    : FAILURES.filter(f => f.classification.toLowerCase().includes(cat.toLowerCase().replace(" error","").replace("operator","operator").split(" ")[0]));
+    : FAILURES.filter(f =>
+        f.classification.toLowerCase().includes(
+          cat.toLowerCase().replace(" error", "").split(" ")[0]
+        )
+      );
 
   return (
     <>
-<style jsx>{`
-  @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Playfair+Display:ital,wght@0,400;0,900;1,400&display=swap');
-  
-  /* Scoped container - ONLY affects failure-log page */
-  .failure-log-page * {
-    box-sizing: border-box;
-  }
-  .failure-log-page {
-    margin: 0;
-    padding: 0;
-  }
-  
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-  @keyframes stampIn {
-    0% { transform: rotate(-5deg) scale(1.3); opacity:0; }
-    70% { transform: rotate(2deg) scale(0.97); opacity:0.9; }
-    100% { transform: rotate(-1deg) scale(1); opacity:1; }
-  }
-  @keyframes wideUnderline {
-    from { width: 0 }
-    to { width: 100% }
-  }
-  
-  /* Add class to ALL scrollable elements */
-  .fl-mscroll::-webkit-scrollbar { width: 6px; }
-  .fl-mscroll::-webkit-scrollbar-track { background: ${C.paper2}; }
-  .fl-mscroll::-webkit-scrollbar-thumb { background: ${C.rule}; }
-  
-  .catbtn:hover { background: ${C.ink} !important; color: ${C.acid} !important; }
-`}</style>
+      {/* FIX: replaced <style jsx> with plain <style> tag — jsx prop requires styled-jsx which isn't installed */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Playfair+Display:ital,wght@0,400;0,900;1,400&display=swap');
 
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        @keyframes stampIn {
+          0% { transform: rotate(-5deg) scale(1.3); opacity:0; }
+          70% { transform: rotate(2deg) scale(0.97); opacity:0.9; }
+          100% { transform: rotate(-1deg) scale(1); opacity:1; }
+        }
+
+        .fl-mscroll::-webkit-scrollbar { width: 6px; }
+        .fl-mscroll::-webkit-scrollbar-track { background: ${C.paper2}; }
+        .fl-mscroll::-webkit-scrollbar-thumb { background: ${C.rule}; }
+
+        .catbtn:hover { background: ${C.ink} !important; color: ${C.acid} !important; }
+      `}</style>
 
       <div style={{ background: C.paper, minHeight: "100vh", isolation: "isolate", position: "relative" }}>
 
@@ -599,7 +617,7 @@ export default function FailureLog() {
                   fontFamily: "'Courier New', monospace", fontSize: 10.5,
                   color: C.faded, lineHeight: 1.7, fontStyle: "italic",
                 }}>
-                  "Every catastrophe is a lesson that refused to be ignored."
+                  &ldquo;Every catastrophe is a lesson that refused to be ignored.&rdquo;
                 </div>
               </div>
             </div>
@@ -616,7 +634,7 @@ export default function FailureLog() {
                 lineHeight: 1.65, color: C.ink2,
                 borderLeft: `5px solid ${C.acid}`, paddingLeft: 18,
               }}>
-                Every catastrophic mistake here was a developer's darkest hour. Documented publicly - anonymized, analyzed, filed - so you don't have to live through them yourself.
+                Every catastrophic mistake here was a developer&apos;s darkest hour. Documented publicly &mdash; anonymized, analyzed, filed &mdash; so you don&apos;t have to live through them yourself.
               </p>
               <div style={{
                 fontFamily: "'Courier New', monospace", fontSize: 11.5,
@@ -649,7 +667,7 @@ export default function FailureLog() {
                 whiteSpace: "nowrap", transition: "all 0.18s",
               }}>{c}</button>
             ))}
-            <div style={{ flex: 1, borderBottom: "none" }} />
+            <div style={{ flex: 1 }} />
             <div style={{
               display: "flex", alignItems: "center",
               fontFamily: "'Courier New', monospace", fontSize: 10,
@@ -662,7 +680,9 @@ export default function FailureLog() {
         <main style={{ position: "relative", zIndex: 2, maxWidth: 1200, margin: "0 auto", padding: "56px 5% 100px" }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginBottom: 36 }}>
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, color: C.ink, fontWeight: 900 }}>Incident Archive</h2>
-            <span style={{ fontFamily: "'Courier New', monospace", fontSize: 11, color: C.faded, letterSpacing: 2 }}>- {filtered.length} CASE{filtered.length !== 1 ? "S" : ""}</span>
+            <span style={{ fontFamily: "'Courier New', monospace", fontSize: 11, color: C.faded, letterSpacing: 2 }}>
+              - {filtered.length} CASE{filtered.length !== 1 ? "S" : ""}
+            </span>
             <div style={{ flex: 1, height: 1, background: C.rule }} />
           </div>
 
@@ -693,16 +713,24 @@ export default function FailureLog() {
                     <p style={{ fontFamily: "'Courier New', monospace", fontSize: 13, color: "rgba(245,240,232,0.45)", lineHeight: 1.9, marginBottom: 30 }}>
                       Submit your worst debugging nightmare, deployment disaster, or interview breakdown. Anonymized. Documented. Turned into leverage for the next developer.
                     </p>
-                    <a href="/submit-case" style={{
-                      display: "inline-flex", alignItems: "center", gap: 12,
-                      fontFamily: "'Special Elite', serif", fontSize: 13,
-                      letterSpacing: 3, background: C.acid, color: C.ink,
-                      padding: "16px 32px", textDecoration: "none",
-                      boxShadow: `5px 5px 0 ${C.acidDim}`,
-                      transition: "all 0.18s ease",
-                    }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translate(-2px,-2px)"; (e.currentTarget as HTMLElement).style.boxShadow = `7px 7px 0 ${C.acidDim}`; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = `5px 5px 0 ${C.acidDim}`; }}
+                    <a
+                      href="/submit-case"
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 12,
+                        fontFamily: "'Special Elite', serif", fontSize: 13,
+                        letterSpacing: 3, background: C.acid, color: C.ink,
+                        padding: "16px 32px", textDecoration: "none",
+                        boxShadow: `5px 5px 0 ${C.acidDim}`,
+                        transition: "all 0.18s ease",
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLElement).style.transform = "translate(-2px,-2px)";
+                        (e.currentTarget as HTMLElement).style.boxShadow = `7px 7px 0 ${C.acidDim}`;
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLElement).style.transform = "";
+                        (e.currentTarget as HTMLElement).style.boxShadow = `5px 5px 0 ${C.acidDim}`;
+                      }}
                     >SUBMIT YOUR CASE →</a>
                   </div>
 

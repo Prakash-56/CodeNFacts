@@ -76,7 +76,7 @@ function PaymentStatusInner() {
         if (data.success) {
           setStatus("success");
           fireConfetti();
-          setTimeout(() => router.push("/my-batch/"), 3500);
+          setTimeout(() => router.push("/my-batch"), 3500);
         } else {
           setStatus("failed");
         }

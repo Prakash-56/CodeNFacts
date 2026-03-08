@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     }
 
     const response = await fetch(
-      `https://sandbox.cashfree.com/pg/orders/${orderId}/payments`,
+      `https://api.cashfree.com/pg/orders/${orderId}/payments`,
       {
         method: "GET",
         headers: {

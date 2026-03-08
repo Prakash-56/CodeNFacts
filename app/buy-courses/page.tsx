@@ -1991,10 +1991,10 @@ export default function DashboardPage() {
               <div className="cnf-card">
                 <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#00ffcc", letterSpacing: 1 }}>▪ RECENT ACTIVITY</h3>
                 {[
-                  { action: "Solved", item: "Two Sum", xp: "+100 XP", icon: "✓" },
-                  { action: "Completed", item: "Daily Quiz", xp: "+50 XP", icon: "◆" },
-                  { action: "Studied", item: "Transformer Architecture", xp: "+30 XP", icon: "◉" },
-                  { action: "Solved", item: "Binary Search", xp: "+100 XP", icon: "✓" },
+                  { action: "Solved", item: "Two Sum",time: "1h ago", xp: "+100 XP", icon: "✓" },
+                  { action: "Completed", item: "Daily Quiz",time: "2h ago", xp: "+50 XP", icon: "◆" },
+                  { action: "Studied", item: "Transformer Architecture",time: "10m ago", xp: "+30 XP", icon: "◉" },
+                  { action: "Solved", item: "Binary Search",time: "2m ago", xp: "+100 XP", icon: "✓" },
                 ].map((a, i) => (
                   <div key={i} style={{
                     display: "flex", alignItems: "center", gap: 14,

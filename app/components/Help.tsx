@@ -31,7 +31,7 @@ const typingContainer = {
   },
 };
 
-const typingDot = {
+const typingDot: Variants = {
   hidden: { y: 0 },
   visible: {
     y: [-4, 0, -4],

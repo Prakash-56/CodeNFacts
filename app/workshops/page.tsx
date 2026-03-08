@@ -43,7 +43,7 @@ export default function WorkshopUltra() {
               System Initialization: 2026
             </span>
             <h1 className="mt-6 md:mt-8 text-6xl sm:text-7xl md:text-[10vw] font-black leading-none tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500">
-              Code <span className="text-white">N</span> Facts
+              Code<span className="text-white">N</span>Facts
             </h1>
             <p className="mt-4 text-gray-500 font-mono tracking-widest text-[10px] md:text-sm uppercase">
               // Neural Architecture Workshops
@@ -109,7 +109,7 @@ export default function WorkshopUltra() {
           whileTap={{ scale: 0.95 }}
           className="mt-12 px-10 md:px-16 py-6 md:py-8 bg-white text-black font-black uppercase text-lg md:text-xl rounded-none hover:bg-cyan-400 transition-all z-10 w-full max-w-xs md:max-w-none"
         >
-          Secure Your Slot
+          It's your time to prove that 'What You Are ?'
         </motion.button>
       </section>
     </div>

@@ -1,110 +1,190 @@
 'use client';
 
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
+import { motion, useScroll, useTransform, useSpring, MotionValue } from 'framer-motion';
+import { useRef, useState } from 'react';
 
 const reasons = [
   {
-    title: 'Learning Alone Is Slow',
-    desc: 'You waste months guessing what matters. Direction changes everything.',
+    id: '01',
+    title: 'Solo Learning Crawls',
+    desc: 'Months vanish into trial-and-error loops. Precision routing collapses timelines.',
+    accentHue: 200, // cyan-teal
   },
   {
-    title: 'Tutorials Don’t Build Thinking',
-    desc: 'Real engineering is about decisions, trade-offs, and patterns.',
+    id: '02',
+    title: 'Tutorials Teach Syntax - Not Systems',
+    desc: 'Engineering lives in trade-offs, mental models, and unseen patterns.',
+    accentHue: 280, // purple-magenta
   },
   {
-    title: 'Industry Is Not Linear',
-    desc: 'What companies expect is never taught in the right order.',
+    id: '03',
+    title: 'Industry Knowledge Is Non-Linear',
+    desc: 'Real hiring bars follow chaos, not curriculum chapters.',
+    accentHue: 40,  // amber-orange
   },
   {
-    title: 'Guidance Beats Motivation',
-    desc: 'Discipline comes from clarity - not hype.',
+    id: '04',
+    title: 'Clarity Outperforms Hype',
+    desc: 'Motivation fades. Structural understanding fuels unbreakable discipline.',
+    accentHue: 160, // emerald-teal
   },
 ];
 
 export default function WhyNeedUs() {
-  const ref = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start end', 'end start'],
+    target: sectionRef,
+    offset: ['start start', 'end end'],
   });
 
-  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '-30%']);
-  const lineScale = useTransform(scrollYProgress, [0, 1], [0.2, 1]);
+  const bgTiltX = useTransform(scrollYProgress, [0, 1], [15, -15]);
+  const bgTiltY = useTransform(scrollYProgress, [0, 1], [-10, 10]);
 
   return (
     <section
-      ref={ref}
-      className="relative py-24 md:py-64 overflow-hidden bg-[#05060f]"
+      ref={sectionRef}
+      className="relative min-h-screen bg-[#03040c] text-white overflow-hidden py-32 md:py-48"
+      style={{ perspective: 1800 }}
     >
-      {/* 🌌 Deep animated background */}
-      <motion.div style={{ y: bgY }} className="absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#2563eb22,transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,#7c3aed22,transparent_60%)]" />
-      </motion.div>
+      {/* Deep space background effects */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Very faint grid */}
+        <div className="absolute inset-0 opacity-5 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:80px_80px]" />
 
-      {/* Content */}
-      <div className="relative max-w-7xl mx-auto px-6">
-        {/* Title */}
-        <motion.h2
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-center text-4xl md:text-7xl font-bold text-white mb-20 md:mb-40 tracking-tight"
+        {/* Large orbiting glows */}
+        <motion.div
+          className="absolute left-[10%] top-[15%] w-[800px] h-[800px] rounded-full bg-cyan-900/10 blur-3xl"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
+        />
+        <motion.div
+          className="absolute right-[5%] bottom-[10%] w-[1000px] h-[1000px] rounded-full bg-purple-900/8 blur-3xl"
+          animate={{ rotate: -360 }}
+          transition={{ duration: 140, repeat: Infinity, ease: 'linear' }}
+        />
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
+        {/* Header – floating chrome text */}
+        <motion.div
+          className="text-center mb-40 md:mb-64"
+          style={{ rotateX: bgTiltY, rotateY: bgTiltX, transformStyle: 'preserve-3d' }}
         >
-          Why You Need Us
-        </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: -40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.4 }}
+            className="font-mono text-cyan-400/60 tracking-[0.5em] uppercase text-sm md:text-base mb-6"
+          >
+            CORE DISCONNECTS
+          </motion.p>
 
-        {/* Timeline Container */}
-        <div className="relative">
-          {/* Vertical spine - Center on PC, Left on Mobile */}
-          <motion.div
-            style={{ scaleY: lineScale }}
-            className="absolute left-4 md:left-1/2 top-0 w-[2px] h-full bg-gradient-to-b from-blue-500 via-purple-500 to-transparent origin-top -translate-x-1/2"
-          />
+          <motion.h2
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
+            className="text-6xl sm:text-8xl md:text-9xl font-black tracking-[-0.06em] text-transparent bg-clip-text bg-gradient-to-b from-white via-gray-300 to-gray-600/80"
+            style={{ textShadow: '0 0 60px rgba(34,211,238,0.15)' }}
+          >
+            WHY YOU'RE
+            <br />
+            STUCK
+          </motion.h2>
+        </motion.div>
 
-          {/* Reasons */}
-          <div className="space-y-24 md:space-y-48">
-            {reasons.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-                className={`relative flex items-center w-full ${
-                  i % 2 === 0 
-                    ? 'md:justify-start' 
-                    : 'md:justify-end'
-                } justify-start pl-12 md:pl-0`}
-              >
-                {/* Content Card */}
-                <motion.div
-                  whileInView={{ x: 0 }}
-                  initial={{ x: i % 2 === 0 ? -20 : 20 }}
-                  transition={{ duration: 0.6 }}
-                  className={`w-full md:w-[45%] ${
-                    i % 2 === 0 ? 'md:pr-12' : 'md:pl-12'
-                  }`}
-                >
-                  <div className="bg-white/5 border border-white/10 p-6 md:p-10 rounded-2xl backdrop-blur-sm hover:border-blue-500/50 transition-colors duration-300">
-                    <h3 className="text-2xl md:text-4xl font-semibold text-white mb-4">
-                      {item.title}
-                    </h3>
-                    <p className="text-gray-400 text-base md:text-xl leading-relaxed">
-                      {item.desc}
-                    </p>
-                  </div>
-                </motion.div>
-
-                {/* Desktop Dot Indicator */}
-                <div className="absolute left-[-2px] md:left-1/2 w-4 h-4 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.8)] -translate-x-1/2 z-10 hidden md:block" />
-              </motion.div>
-            ))}
-          </div>
+        {/* Spatial pillars */}
+        <div className="relative space-y-[40vh] md:space-y-[60vh] lg:space-y-[80vh]">
+          {reasons.map((item, i) => (
+            <ReasonPillar key={item.id} item={item} index={i} scrollProgress={scrollYProgress} />
+          ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function ReasonPillar({
+  item,
+  index,
+  scrollProgress,
+}: {
+  item: (typeof reasons)[0];
+  index: number;
+  scrollProgress: MotionValue<number>;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start 70%', 'end 30%'],
+  });
+
+  const spring = { stiffness: 70, damping: 20 };
+
+  const pillarTiltX = useSpring(useTransform(scrollYProgress, [0, 0.5, 1], [25, 0, -18]), spring);
+  const pillarTiltY = useSpring(useTransform(scrollYProgress, [0, 0.5, 1], [-30, 0, 22]), spring);
+  const pillarZ = useTransform(scrollYProgress, [0, 0.5, 1], [-400, 0, -200]);
+  const glowScale = useTransform(scrollYProgress, [0, 0.4, 0.6, 1], [0.4, 1.3, 1.3, 0.6]);
+
+  const textOpacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0.2]);
+  const textY = useTransform(scrollYProgress, [0, 0.5, 1], [120, 0, -60]);
+
+  return (
+    <div ref={ref} className="relative h-[80vh] flex items-center justify-center" style={{ perspective: 1600 }}>
+      <motion.div
+        className="relative w-full max-w-5xl"
+        style={{
+          rotateX: pillarTiltX,
+          rotateY: pillarTiltY,
+          translateZ: pillarZ,
+          transformStyle: 'preserve-3d',
+        }}
+      >
+        {/* Glow halo */}
+        <motion.div
+          className="absolute inset-0 rounded-full blur-3xl opacity-30 -z-10"
+          style={{
+            background: `radial-gradient(circle at 50% 30%, hsl(${item.accentHue}, 90%, 65%), transparent 70%)`,
+            scale: glowScale,
+          }}
+        />
+
+        {/* Main pillar content – holographic slab */}
+        <motion.div
+          className="relative backdrop-blur-xl bg-black/30 border border-white/5 rounded-3xl p-12 md:p-16 lg:p-20 shadow-2xl shadow-black/70 overflow-hidden"
+          style={{
+            opacity: textOpacity,
+            y: textY,
+            transformStyle: 'preserve-3d',
+            translateZ: 80,
+          }}
+        >
+          {/* Subtle scan lines */}
+          <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_bottom,transparent_50%,#00ffff08_50%)] bg-[size:100%_4px] opacity-20 animate-scan" />
+
+          <div className="flex items-baseline gap-6 mb-10">
+            <div className="text-8xl md:text-9xl lg:text-[12rem] font-black text-white/[0.07] leading-none tracking-tighter">
+              {item.id}
+            </div>
+            <h3 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight">
+              {item.title}
+            </h3>
+          </div>
+
+          <p className="text-xl md:text-2xl lg:text-3xl font-light text-cyan-100/80 leading-relaxed max-w-3xl">
+            {item.desc}
+          </p>
+        </motion.div>
+
+        {/* Floating accent lines / particles simulation */}
+        <motion.div
+          className="absolute -inset-20 pointer-events-none"
+          style={{ translateZ: -120 }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent blur-xl opacity-40 animate-pulse-slow" />
+        </motion.div>
+      </motion.div>
+    </div>
   );
 }

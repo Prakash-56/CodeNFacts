@@ -162,12 +162,12 @@ export default function DataAIDetails() {
         <motion.a
           whileHover={{ scale: 1.12 }}
           whileTap={{ scale: 0.96 }}
-          href="/courses/ai-ml/apply?price=4999"
+          href="../apply-for-internship"
           className="inline-flex items-center px-16 py-6 rounded-full
                      bg-blue-500 text-black text-xl font-extrabold
                      shadow-[0_0_60px_rgba(59,130,246,0.7)]"
         >
-          Enter the AI Zone · ₹4999
+          Get Hired From Us !!
         </motion.a>
       </motion.div>
     </section>

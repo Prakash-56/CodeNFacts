@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Github, Zap, CheckCircle2, Linkedin, Instagram, Terminal, Mail, ChevronRight, Code2, Shield, FileText, Server, Headphones } from "lucide-react";
+import { Github, Zap, CheckCircle2, Linkedin, Terminal, Mail, ChevronRight, Code2, Shield, FileText, Server, Headphones } from "lucide-react";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
@@ -13,10 +13,10 @@ export default function Footer() {
   // Navigation links - UPDATE THESE WITH YOUR ACTUAL LINKS
   const navLinks = {
     // Core Modules
-    aiRoadmap: "#ai-roadmap",
-    neuralArchitecture: "#neural-architecture", 
-    mlPipeline: "#ml-pipeline",
-    codeAcademy: "#code-academy",
+    aiRoadmap: "/ai-roadmap",
+    neuralArchitecture: "/neural-architecture", 
+    mlPipeline: "/ml-pipeline",
+    codeAcademy: "/courses",
     
     // Network
     privacyMatrix: "/privacy-policy",
@@ -29,7 +29,6 @@ export default function Footer() {
   const socialLinks = {
     github: "https://github.com/",
     linkedin: "https://linkedin.com/company/codenfacts", 
-    instagram: "https://www.instagram.com/codenfacts?igsh=MTRxaGI0djF6cnNqaQ=="
   };
 
   // Terminal typing animation
@@ -135,7 +134,7 @@ export default function Footer() {
                 { name: "AI Roadmap", href: navLinks.aiRoadmap, icon: <Zap size={14} /> },
                 { name: "Neural Architecture", href: navLinks.neuralArchitecture, icon: <Code2 size={14} /> },
                 { name: "ML Pipeline", href: navLinks.mlPipeline, icon: <Server size={14} /> },
-                { name: "Code Academy", href: navLinks.codeAcademy, icon: <Code2 size={14} /> }
+                { name: "Courses", href: navLinks.codeAcademy, icon: <Code2 size={14} /> }
               ]} 
             />
             <FooterColumn 
@@ -247,7 +246,6 @@ export default function Footer() {
                 <div className="flex items-center gap-4">
                   <SocialButton icon={<Github size={20} />} href={socialLinks.github} />
                   <SocialButton icon={<Linkedin size={20} />} href={socialLinks.linkedin} />
-                  <SocialButton icon={<Instagram size={20} />} href={socialLinks.instagram} />
                 </div>
                 
                 <div className="text-xs font-mono text-gray-500 uppercase tracking-wider border-l border-gray-700 pl-6 hidden lg:block">

@@ -84,12 +84,12 @@ export default function CertificatePreview() {
         {/* CTA Button */}
         <div className="text-center mt-16">
           <motion.a
-            href="/courses/apply"
+            href="/courses/projects"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="inline-block px-12 py-4 bg-blue-600 text-white text-xl font-semibold rounded-full shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all"
           >
-            Enroll Now & Get Certificate
+            Get Certified & Build Real Projects
           </motion.a>
         </div>
       </div>

@@ -189,7 +189,7 @@ export default function UniqueCommunityPage() {
               <h2 className="text-4xl md:text-6xl font-bold mb-8 text-white">READY TO INITIALIZE?</h2>
               <p className="text-zinc-500 mb-12 max-w-md mx-auto">By joining, you acknowledge that comfort is no longer the priority. Evolution is the only metric.</p>
               <button className="bg-white text-black px-12 py-4 font-black hover:bg-lime-400 hover:tracking-[0.5em] transition-all duration-500">
-                EXECUTE_JOIN_SCRIPT
+                Don't be late
               </button>
             </div>
           </div>

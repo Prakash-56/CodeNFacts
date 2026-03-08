@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import React, { useRef, useState, useEffect } from 'react';
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
 export default function GetNotes() {
@@ -12,70 +12,68 @@ export default function GetNotes() {
     offset: ["start start", "end end"]
   });
 
-  // Transform values for a "zoom-out" into the content effect
-  const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.8]);
-  const opacity = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [1, 1, 1, 0]);
-  
-  // Text reveal animations
-  const textX1 = useTransform(scrollYProgress, [0.1, 0.4], [0, -100]);
-  const textX2 = useTransform(scrollYProgress, [0.1, 0.4], [0, 100]);
+  // Smooth out the scroll progress for more fluid animations
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  // Perspective and background transforms
+  const rotateX = useTransform(smoothProgress, [0, 0.2], [0, 45]);
+  const z = useTransform(smoothProgress, [0, 0.2], [0, -500]);
+  const opacity = useTransform(smoothProgress, [0, 0.1, 0.8, 1], [1, 1, 1, 0]);
 
   return (
-    <div ref={containerRef} className="relative h-[300vh] bg-black">
-      {/* The Sticky Canvas */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col items-center justify-center">
+    <div ref={containerRef} className="relative h-[400vh] bg-[#050505] overflow-clip">
+      <div className="sticky top-0 h-screen w-full flex items-center justify-center perspective-[1000px]">
         
-        {/* Ambient Background - Reacts to Scroll */}
-        <BackgroundEffect progress={scrollYProgress} />
+        {/* Advanced Grid Floor */}
+        <GridFloor progress={smoothProgress} />
 
-        {/* Section 1: The Massive Intro (Splits apart on scroll) */}
-        <motion.div style={{ scale, opacity }} className="relative z-20 text-center">
-          <motion.h2 
-            style={{ x: textX1 }}
-            className="text-[12vw] font-bold tracking-tighter text-white leading-none inline-block"
+        {/* Hero Section - Letter Glitch Effect */}
+        <motion.div 
+          style={{ rotateX, translateZ: z, opacity }} 
+          className="relative z-20 text-center pointer-events-none"
+        >
+          <div className="overflow-hidden py-4">
+            <GlitchText text="KNOWLEDGE" className="text-[10vw] md:text-[8vw] font-black text-white leading-none" />
+            <GlitchText text="HUB" className="text-[10vw] md:text-[8vw] font-black text-indigo-600 leading-none" />
+          </div>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-indigo-300/50 font-mono tracking-[0.5em] text-xs mt-4 uppercase"
           >
-            KNOWLEDGE
-          </motion.h2>
-          <motion.h2 
-            style={{ x: textX2 }}
-            className="text-[12vw] font-bold tracking-tighter text-indigo-500 leading-none inline-block ml-4"
-          >
-            HUB.
-          </motion.h2>
-          <p className="mt-4 text-neutral-500 text-xl tracking-widest uppercase">Scroll to deconstruct</p>
+            Initializing Neural Interface...
+          </motion.p>
         </motion.div>
 
-        {/* Section 2: The Interactive Nodes (Reveals as intro splits) */}
-        <div className="absolute inset-0 flex items-center justify-center gap-12 md:gap-32 px-10">
-          <ActionNode 
-            progress={scrollYProgress}
-            range={[0.3, 0.6]}
-            title="THE REPOSITORY"
-            subtitle="Curated Engineering Intelligence"
-            points={["System Design", "Low Level Design", "Edge Cases"]}
+        {/* Interactive Floating Nodes */}
+        <div className="absolute inset-0 z-30 pointer-events-none">
+          <FloatingNode 
+            progress={smoothProgress}
+            range={[0.2, 0.5]}
+            title="01"
+            label="REPOSITORY"
+            description="Deep dive into system architectures.         'CLICK HERE'"
             href="/explore-notes"
-            align="left"
+            position={{ top: '20%', left: '15%' }}
           />
-          
-          <ActionNode 
-            progress={scrollYProgress}
-            range={[0.5, 0.8]}
-            title="THE ON-DEMAND"
-            subtitle="Custom Notes Tailored to You"
-            points={["Personalized Depth", "Specific Frameworks", "Direct Support"]}
+          <FloatingNode 
+            progress={smoothProgress}
+            range={[0.4, 0.7]}
+            title="02"
+            label="ON-DEMAND"
+            description="Request custom engineering blueprints.          'CLICK HERE'"
             href="/ask-notes"
-            align="right"
+            position={{ bottom: '20%', right: '15%' }}
           />
         </div>
 
-        {/* Bottom Status Bar */}
-        <motion.div 
-          style={{ opacity: useTransform(scrollYProgress, [0.8, 0.9], [0, 1]) }}
-          className="absolute bottom-12 w-full px-12 flex justify-between items-end border-t border-white/10 pt-8"
-        >
-          <div className="text-neutral-500 font-mono text-sm">SYSTEM: READY</div>
-          <div className="text-white text-2xl font-light">This is <span className="italic">Leverage.</span></div>
-        </motion.div>
+        {/* HUD Elements */}
+        <div className="absolute inset-0 z-10 opacity-30 border-[1px] border-white/5 m-8 pointer-events-none" />
+        <ScanningLine progress={smoothProgress} />
       </div>
     </div>
   );
@@ -83,50 +81,67 @@ export default function GetNotes() {
 
 /* ---------- Sub-Components ---------- */
 
-function ActionNode({ progress, range, title, subtitle, points, href, align }: any) {
-  // Appearance physics
-  const y = useTransform(progress, range, [100, 0]);
+function GlitchText({ text, className }: { text: string; className: string }) {
+  return (
+    <div className={`relative inline-block ${className}`}>
+      {text.split('').map((char, i) => (
+        <motion.span
+          key={i}
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: i * 0.05, ease: [0.33, 1, 0.68, 1], duration: 1 }}
+          className="inline-block hover:text-indigo-400 transition-colors duration-300"
+        >
+          {char}
+        </motion.span>
+      ))}
+    </div>
+  );
+}
+
+function FloatingNode({ progress, range, title, label, description, href, position }: any) {
+  const y = useTransform(progress, range, [400, -100]);
   const opacity = useTransform(progress, range, [0, 1]);
-  const blur = useTransform(progress, range, [10, 0]);
+  const scale = useTransform(progress, range, [0.8, 1]);
 
   return (
     <motion.div 
-      style={{ y, opacity, filter: `blur(${blur}px)` }}
-      className={`max-w-md ${align === 'right' ? 'mt-32' : '-mt-32'}`}
+      style={{ ...position, y, opacity, scale }}
+      className="absolute pointer-events-auto group"
     >
-      <h3 className="text-indigo-400 font-mono text-sm mb-2">{title}</h3>
-      <h4 className="text-4xl md:text-6xl font-bold text-white tracking-tight mb-6">{subtitle}</h4>
-      
-      <div className="space-y-4 mb-8">
-        {points.map((p: string) => (
-          <div key={p} className="flex items-center gap-3 group">
-            <div className="h-[1px] w-4 bg-indigo-800 group-hover:w-8 transition-all duration-300" />
-            <span className="text-neutral-400 group-hover:text-white transition-colors">{p}</span>
-          </div>
-        ))}
-      </div>
-
-      <Link href={href} className="group flex items-center gap-4 text-white font-medium">
-        <span className="h-12 w-12 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-          →
-        </span>
-        <span className="uppercase tracking-widest text-xs">Ask for Notes</span>
+      <Link href={href}>
+        <div className="relative p-6 border-l border-indigo-500/50 bg-black/40 backdrop-blur-md hover:bg-indigo-500/10 transition-all duration-500">
+          <span className="text-indigo-500 font-mono text-xs mb-2 block">{title} //</span>
+          <h3 className="text-white text-2xl font-bold tracking-tighter mb-2 group-hover:translate-x-2 transition-transform uppercase">{label}</h3>
+          <p className="text-neutral-400 text-sm max-w-[200px] leading-relaxed">{description}</p>
+          <div className="mt-4 h-[1px] w-0 bg-indigo-500 group-hover:w-full transition-all duration-700" />
+        </div>
       </Link>
     </motion.div>
   );
 }
 
-function BackgroundEffect({ progress }: { progress: any }) {
-  const rotate = useTransform(progress, [0, 1], [0, 45]);
-  const bgOpacity = useTransform(progress, [0, 0.5, 1], [0.1, 0.3, 0.1]);
+function GridFloor({ progress }: { progress: any }) {
+  const y = useTransform(progress, [0, 1], [0, -200]);
+  
+  return (
+    <div className="absolute inset-0 z-0 overflow-hidden [perspective:1000px]">
+      <motion.div 
+        style={{ rotateX: 60, y }}
+        className="absolute -bottom-[50%] left-[-25%] w-[150%] h-[200%] opacity-20"
+      >
+        <div className="w-full h-full bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+      </motion.div>
+    </div>
+  );
+}
 
+function ScanningLine({ progress }: { progress: any }) {
+  const y = useTransform(progress, [0, 1], ["0vh", "100vh"]);
   return (
     <motion.div 
-      style={{ rotate, opacity: bgOpacity }}
-      className="absolute inset-0 z-0"
-    >
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[repeating-linear-gradient(0deg,transparent,transparent_49px,#ffffff05_50px)]" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[repeating-linear-gradient(90deg,transparent,transparent_49px,#ffffff05_50px)]" />
-    </motion.div>
+      style={{ top: y }}
+      className="absolute left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent z-50 pointer-events-none"
+    />
   );
 }

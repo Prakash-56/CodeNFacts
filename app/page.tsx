@@ -12,7 +12,10 @@ import GetInTouch from "./components/GetInTouch";
 import CodingChallenges from "./components/CodingChallenges";
 import WhatWeHelp from "./components/WhatWeHelp";
 import WhyNeedUs from "./components/WhyNeedUs";
+import Motivate from "./components/Motivate"
 import JoinCommunity from "./components/JoinCommunity";
+import Testimonial from "./components/Testimonial"
+import Mindset from "./components/Mindset"
 import CertificatePreview from "./components/CertificatePreview";
 import HappyLearners from "./components/HappyLearners";
 import MentorshipSection from "./components/MentorShip";
@@ -40,7 +43,10 @@ export default function Home() {
       <CodingChallenges/>
       <WhatWeHelp/>
       <WhyNeedUs/>
+      <Motivate/>
       <JoinCommunity/>
+      <Testimonial/>
+      <Mindset/>
       <CertificatePreview/>
       <HappyLearners/>
       <MentorshipSection/>

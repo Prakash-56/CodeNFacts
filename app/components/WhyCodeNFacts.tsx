@@ -22,7 +22,7 @@ const features = [
   {
     icon: Wrench,
     title: "Industry-Scale Projects",
-    desc: "Build systems that handle edge cases, state management, and deployment—not just 'Todo' apps.",
+    desc: "Build systems that handle edge cases, state management, and deployment-not just 'Todo' apps.",
     color: "from-purple-400 to-fuchsia-600",
     shadow: "shadow-purple-500/20",
   },

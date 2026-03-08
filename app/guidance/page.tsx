@@ -72,7 +72,7 @@ export default function GuidanceExplore() {
             </h2>
             <p className="text-gray-400 text-lg leading-relaxed">
               Standard tutorials lead you by the hand. We force you to stand on your own. 
-              Our guidance protocol is designed to simulate the "Senior Engineer Crisis"—where 
+              Our guidance protocol is designed to simulate the "Senior Engineer Crisis"- where 
               there is no documentation, and the clock is ticking.
             </p>
             <div className="flex gap-4">
@@ -158,7 +158,7 @@ export default function GuidanceExplore() {
         >
           <h2 className="text-5xl md:text-7xl font-bold mb-10">Ready to stop guessing?</h2>
           <button className="px-12 py-5 bg-blue-600 rounded-full text-xl font-bold hover:bg-blue-500 hover:scale-105 transition-all active:scale-95 shadow-[0_0_50px_rgba(37,99,235,0.4)]">
-            Begin the Guidance
+            Start Larning From Today !! Don't be late
           </button>
         </motion.div>
       </section>

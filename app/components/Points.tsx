@@ -136,13 +136,6 @@ const Points = () => {
             <p className="text-slate-400 text-xl max-w-3xl mx-auto mb-12">
               At <span className="text-white font-bold">CodeNFacts</span>, we architect our courses to eliminate these 10 mistakes.
             </p>
-            <motion.button
-              whileHover={{ scale: 1.05, boxShadow: "0 0 40px rgba(37, 99, 235, 0.4)" }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-blue-600 text-white px-12 py-5 rounded-full font-black text-xl tracking-widest uppercase"
-            >
-              Enroll in CodenFacts
-            </motion.button>
           </div>
         </motion.div>
       </div>

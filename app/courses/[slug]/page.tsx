@@ -304,7 +304,7 @@ function ProjectCard({ proj, idx, color }: {
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function CourseDetail({ params }: PageProps) {
   const { slug } = use(params);
-  const course: Course | undefined = courses.find((c) => c.slug === slug);
+  const course = courses.find((c) => c.slug === slug);
   if (!course) return notFound();
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState, useEffect, useRef } from "react";
-import { courses } from "@/data/courses";
+import { courses, type Course, type ProjectItem, type SyllabusItem, type FAQItem } from "@/data/courses";
 import { notFound } from "next/navigation";
 import {
   motion,
@@ -17,8 +17,7 @@ import {
   ArrowRight, BookOpen, Star, Play, Code2,
   ChevronDown, Users, Zap, Lock, Award,
   FolderGit2, Layers,
-  Terminal, BarChart3, Layout, Briefcase,
-  ChevronRight, Plus, ArrowUpRight, Timer,
+  Plus, ArrowUpRight, Timer,
   HelpCircle,
 } from "lucide-react";
 
@@ -26,22 +25,7 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-interface SyllabusModule {
-  module: string;
-  title: string;
-  topics: string[];
-}
-
-interface Project {
-  type: string;
-  title: string;
-  tech: string;
-}
-
-interface FAQ {
-  question: string;
-  answer: string;
-}
+// Types are imported from @/data/courses
 
 // ─── LIVE PARTICLE CANVAS ──────────────────────────────────────────────────────
 function ParticleField({ color = "#6366f1" }: { color?: string }) {
@@ -198,7 +182,7 @@ function ModuleAccordion({
   idx,
   color,
 }: {
-  mod: SyllabusModule;
+  mod: SyllabusItem;
   idx: number;
   color: string;
 }) {
@@ -463,9 +447,9 @@ export default function CourseDetail({ params }: PageProps) {
   const heroParallax = useTransform(scrollY, [0, 600], [0, -120]);
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
 
-  const accentColor = course.color || "#6366f1";
-  const gradientFrom = course.gradientFrom || "#4f46e5";
-  const gradientTo = course.gradientTo || "#7c3aed";
+  const accentColor: string = course.color || "#6366f1";
+  const gradientFrom: string = course.gradientFrom || "#4f46e5";
+  const gradientTo: string = course.gradientTo || "#7c3aed";
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => setMousePos({ x: e.clientX, y: e.clientY });
@@ -473,8 +457,8 @@ export default function CourseDetail({ params }: PageProps) {
     return () => window.removeEventListener("mousemove", onMove);
   }, []);
 
-  const majorProjects = (course.projects || []).filter((p: Project) => p.type === "major");
-  const minorProjects = (course.projects || []).filter((p: Project) => p.type === "minor");
+  const majorProjects = (course.projects || []).filter((p: ProjectItem) => p.type === "major");
+  const minorProjects = (course.projects || []).filter((p: ProjectItem) => p.type === "minor");
   const allProjects = [...majorProjects, ...minorProjects];
 
   return (
@@ -706,7 +690,7 @@ export default function CourseDetail({ params }: PageProps) {
                   color={accentColor}
                 />
                 <div className="space-y-3">
-                  {(course.syllabus || []).map((mod: SyllabusModule, i: number) => (
+                  {(course.syllabus || []).map((mod: SyllabusItem, i: number) => (
                     <ModuleAccordion key={i} mod={mod} idx={i} color={accentColor} />
                   ))}
                 </div>
@@ -729,11 +713,11 @@ export default function CourseDetail({ params }: PageProps) {
                     ● 10+ Mini projects (concept reinforcement)
                   </span>
                 </div>
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  {allProjects.map((proj, i) => (
-    <ProjectCard key={i} proj={proj} idx={i} color={accentColor} />
-  ))}
-</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {allProjects.map((proj: ProjectItem, i: number) => (
+                    <ProjectCard key={i} proj={proj} idx={i} color={accentColor} />
+                  ))}
+                </div>
               </section>
 
               {/* CERTIFICATION */}
@@ -816,7 +800,7 @@ export default function CourseDetail({ params }: PageProps) {
                   color={accentColor}
                 />
                 <div className="space-y-3">
-                  {(course.faqs || []).map((faq: FAQ, i: number) => (
+                  {(course.faqs || []).map((faq: FAQItem, i: number) => (
                     <motion.div
                       key={i}
                       initial={{ opacity: 0, y: 15 }}

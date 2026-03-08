@@ -200,17 +200,16 @@ function CommunityCard({
       onMouseMove={magnet.onMove}
       onMouseLeave={() => { magnet.onLeave(); setHovered(false); }}
       onMouseEnter={() => setHovered(true)}
-      style={{ x: magnet.sx, y: magnet.sy }}
       initial={{ opacity: 0, y: 60, rotateX: -15 }}
       animate={{ opacity: 1, y: 0, rotateX: 0 }}
       transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
       className="relative group block overflow-hidden rounded-[2rem] cursor-pointer"
       style={{
-        background: 'rgba(5, 5, 20, 0.7)',
-        border: '1px solid rgba(255,255,255,0.07)',
-        backdropFilter: 'blur(20px)',
-        transformStyle: 'preserve-3d',
-      } as any}
+    transform: 'translateZ(60px)',
+    background: 'rgba(5, 5, 20, 0.7)',
+    border: '1px solid rgba(255,255,255,0.07)',
+    backdropFilter: 'blur(20px)',
+  }}
     >
       {/* Animated gradient border */}
       <motion.div

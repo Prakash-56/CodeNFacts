@@ -154,7 +154,7 @@ export default function HelpSection() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-5 z-10" style={{ transform: 'translateZ(60px)' }}>
-            <Link href="/ApplyForHelp">
+            <Link href="/apply-for-help">
               <motion.button
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}

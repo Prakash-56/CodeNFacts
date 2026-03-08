@@ -458,7 +458,7 @@ export default function IssueSection() {
             {/* ── CTA Buttons ── */}
             <div className="flex flex-wrap justify-center gap-4">
               {/* Primary */}
-              <Link href="/ApplyForIssue">
+              <Link href="/apply-for-issue">
                 <button
                   className="group relative flex items-center gap-2 px-7 py-3.5 text-sm font-bold tracking-wide overflow-hidden rounded-lg"
                   style={{

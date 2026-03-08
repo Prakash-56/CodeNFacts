@@ -31,8 +31,8 @@ function GrainOverlay() {
 }
 
 // ── Magnetic submit button ───────────────────────────────────────────────────
-function MagneticButton({ children, className, disabled, type }: {
-  children: React.ReactNode; className?: string; disabled?: boolean; type?: 'submit' | 'button';
+function MagneticButton({ children, className, disabled, type, style }: {
+  children: React.ReactNode; className?: string; disabled?: boolean; type?: 'submit' | 'button'; style?: React.CSSProperties;
 }) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const x = useMotionValue(0);
@@ -435,7 +435,7 @@ export default function ApplyForIssue() {
               <MagneticButton type="submit" disabled={status === 'submitting'}
                 className="w-full relative group overflow-hidden rounded-xl py-4 text-sm font-bold tracking-wide text-white
                   transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
-                style={{ background: 'linear-gradient(135deg,#dc2626,#b91c1c)' } as React.CSSProperties}
+                style={{ background: "linear-gradient(135deg,#dc2626,#b91c1c)" }}
               >
                 {/* hover overlay */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"

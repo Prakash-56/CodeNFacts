@@ -1406,9 +1406,19 @@ export default function DocsPage() {
                     color: "#00d4ff", fontWeight: 700, fontSize: 14,
                     textDecoration: "none", fontFamily: "'JetBrains Mono',monospace",
                   }}>support@codenfacts.in</a>
-                  <span style={{ marginLeft: "auto", fontSize: 12, color: "rgba(255,255,255,.25)", background: "rgba(52,211,153,.1)", padding: "4px 12px", borderRadius: 20, border: "1px solid rgba(52,211,153,.2)", color: "#34d399" }}>
-                    ← Reply within 24 hrs
-                  </span>
+                  <span
+  style={{
+    marginLeft: "auto",
+    fontSize: 12,
+    background: "rgba(52,211,153,.1)",
+    padding: "4px 12px",
+    borderRadius: 20,
+    border: "1px solid rgba(52,211,153,.2)",
+    color: "#34d399"
+  }}
+>
+  ← Reply within 24 hrs
+</span>
                 </div>
               </Reveal>
             </section>

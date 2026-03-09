@@ -13,7 +13,6 @@ import {
   useTransform,
 } from "framer-motion";
 
-// ─── INNER COMPONENT (uses useSearchParams — must be inside Suspense) ─────────
 function PaymentStatusInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -22,14 +21,13 @@ function PaymentStatusInner() {
   const courseId = searchParams.get("courseId");
 
   const [status, setStatus] = useState<"checking" | "success" | "failed">("checking");
+  // ✅ Track if verification already completed to prevent timeout overriding it
+  const [verified, setVerified] = useState(false);
 
-  /* 3D Mouse Tilt */
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-
   const rotateX = useTransform(mouseY, [-100, 100], [12, -12]);
   const rotateY = useTransform(mouseX, [-100, 100], [-12, 12]);
-
   const springX = useSpring(rotateX, { stiffness: 120, damping: 20 });
   const springY = useSpring(rotateY, { stiffness: 120, damping: 20 });
 
@@ -39,11 +37,9 @@ function PaymentStatusInner() {
     mouseY.set(e.clientY - rect.top - rect.height / 2);
   };
 
-  /* Confetti Effect */
   const fireConfetti = () => {
     const duration = 2500;
     const end = Date.now() + duration;
-
     const frame = () => {
       confetti({ particleCount: 4, angle: 60, spread: 70, origin: { x: 0 } });
       confetti({ particleCount: 4, angle: 120, spread: 70, origin: { x: 1 } });
@@ -52,12 +48,12 @@ function PaymentStatusInner() {
     frame();
   };
 
-  /* Payment Verification */
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (!user || !orderId || !courseId) {
-        console.log("Missing data:", { user, orderId, courseId });
+        console.log("Missing data:", { user: !!user, orderId, courseId });
         setStatus("failed");
+        setVerified(true);
         return;
       }
 
@@ -70,25 +66,34 @@ function PaymentStatusInner() {
 
         const data = await res.json();
 
-        // smoother UX to let the animation breathe
-        await new Promise((r) => setTimeout(r, 1500));
+        // ✅ Log full response so you can debug in browser console
+        console.log("Verify payment response:", data);
+
+        // ✅ Removed the 1500ms delay — it was pushing you over the timeout
+        setVerified(true);
 
         if (data.success) {
           setStatus("success");
           fireConfetti();
           setTimeout(() => router.push("/my-batch"), 3500);
         } else {
+          console.error("Verification failed:", data);
           setStatus("failed");
         }
       } catch (error) {
         console.error("Verification Error:", error);
+        setVerified(true);
         setStatus("failed");
       }
     });
 
+    // ✅ Increased timeout from 12s to 25s — enough for slow connections
     const timeout = setTimeout(() => {
-      setStatus((prev) => (prev === "checking" ? "failed" : prev));
-    }, 12000);
+      if (!verified) {
+        console.warn("Verification timed out");
+        setStatus((prev) => (prev === "checking" ? "failed" : prev));
+      }
+    }, 25000);
 
     return () => {
       unsubscribe();
@@ -99,10 +104,8 @@ function PaymentStatusInner() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-black text-white">
-      {/* Holographic grid background */}
       <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:60px_60px]" />
 
-      {/* Glow orbs */}
       <motion.div
         animate={{ y: [0, -80, 0] }}
         transition={{ duration: 12, repeat: Infinity }}
@@ -114,7 +117,6 @@ function PaymentStatusInner() {
         className="absolute w-[500px] h-[500px] bg-cyan-500/20 blur-[140px] rounded-full bottom-[-200px] right-[-150px]"
       />
 
-      {/* Glass card */}
       <motion.div
         onMouseMove={handleMouseMove}
         style={{ rotateX: springX, rotateY: springY }}
@@ -138,7 +140,9 @@ function PaymentStatusInner() {
                 transition={{ repeat: Infinity, duration: 1.8, ease: "linear" }}
                 className="w-20 h-20 border-4 border-cyan-400 border-t-transparent rounded-full mx-auto"
               />
-              <p className="text-yellow-400 text-lg">Verifying with Cashfree...</p>
+              {/* ✅ More informative loading message */}
+              <p className="text-yellow-400 text-lg">Verifying your payment...</p>
+              <p className="text-gray-500 text-xs">This may take a few seconds</p>
             </motion.div>
           )}
 
@@ -202,7 +206,6 @@ function PaymentStatusInner() {
   );
 }
 
-// ─── LOADING FALLBACK ─────────────────────────────────────────────────────────
 function PaymentStatusLoading() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white">
@@ -211,7 +214,6 @@ function PaymentStatusLoading() {
   );
 }
 
-// ─── OUTER PAGE — wraps inner in Suspense (required by Next.js for useSearchParams) ──
 export default function PaymentStatusPage() {
   return (
     <Suspense fallback={<PaymentStatusLoading />}>

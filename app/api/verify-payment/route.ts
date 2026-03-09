@@ -20,7 +20,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Match whichever env your create-order uses
     const cashfreeBaseUrl =
       process.env.CASHFREE_ENV === "production"
         ? "https://api.cashfree.com"
@@ -41,18 +40,24 @@ export async function POST(req: Request) {
 
     const payments = await response.json();
 
-    // ✅ Log so you can debug in Vercel logs
-    console.log("Cashfree payments response:", JSON.stringify(payments));
+    console.log("Cashfree HTTP Status:", response.status);
+    console.log("Cashfree Raw Response:", JSON.stringify(payments));
 
     if (!response.ok) {
-      return NextResponse.json(
-        { success: false, message: payments?.message || "Payment verification failed" },
-        { status: 400 }
-      );
+      return NextResponse.json({
+        success: false,
+        message: payments?.message || "Payment verification failed",
+        // ✅ Shows exact Cashfree error in browser
+        debug_cashfree_error: payments,
+        debug_status_code: response.status,
+      }, { status: 400 });
     }
 
-    // ✅ Handle both array AND single object response from Cashfree
     const paymentsArray = Array.isArray(payments) ? payments : [payments];
+
+    // ✅ Log exact status strings Cashfree is returning
+    const allStatuses = paymentsArray.map((p: any) => p.payment_status);
+    console.log("All payment statuses:", allStatuses);
 
     const successfulPayment = paymentsArray.find(
       (p: any) =>
@@ -62,14 +67,13 @@ export async function POST(req: Request) {
     );
 
     if (!successfulPayment) {
-      console.log(
-        "No successful payment. Statuses:",
-        paymentsArray.map((p: any) => p.payment_status)
-      );
-      return NextResponse.json(
-        { success: false, message: "Payment not completed" },
-        { status: 402 }
-      );
+      // ✅ Return statuses to browser so you can see them
+      return NextResponse.json({
+        success: false,
+        message: "Payment not completed",
+        debug_statuses: allStatuses,
+        debug_full_response: paymentsArray,
+      }, { status: 402 });
     }
 
     const purchaseId = `${userId}_${courseId}`;
@@ -84,7 +88,6 @@ export async function POST(req: Request) {
       createdAt: new Date(),
     });
 
-    // ✅ Fixed FieldValue import
     await db.collection("users").doc(userId).set(
       { purchasedCourses: FieldValue.arrayUnion(courseId) },
       { merge: true }
@@ -103,4 +106,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

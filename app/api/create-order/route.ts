@@ -8,7 +8,7 @@ export async function POST(req: Request) {
 
     const {
       slug,
-      courseId,    
+      courseId,
       fullName: name,
       email,
       phone,
@@ -43,12 +43,18 @@ export async function POST(req: Request) {
       );
     }
 
+    // ✅ Match environment for both create-order and verify-payment
+    const cashfreeBaseUrl =
+      process.env.CASHFREE_ENV === "production"
+        ? "https://api.cashfree.com"
+        : "https://sandbox.cashfree.com";
+
     // Generate unique order id
     const orderId = `enroll_${slug?.replace(/[^a-z0-9]/gi, "")}_${Date.now()}`;
 
     // Create order in Cashfree
     const cashfreeResponse = await fetch(
-      "https://api.cashfree.com/pg/orders",
+      `${cashfreeBaseUrl}/pg/orders`,
       {
         method: "POST",
         headers: {

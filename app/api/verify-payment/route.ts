@@ -1,12 +1,9 @@
-// app/api/verify-payment/route.ts
-
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
-import admin from "firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 export async function POST(req: Request) {
   try {
-
     const { orderId, userId, courseId } = await req.json();
 
     if (!userId) {
@@ -23,8 +20,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // ✅ Match whichever env your create-order uses
+    const cashfreeBaseUrl =
+      process.env.CASHFREE_ENV === "production"
+        ? "https://api.cashfree.com"
+        : "https://sandbox.cashfree.com";
+
     const response = await fetch(
-      `https://api.cashfree.com/pg/orders/${orderId}/payments`,
+      `${cashfreeBaseUrl}/pg/orders/${orderId}/payments`,
       {
         method: "GET",
         headers: {
@@ -38,23 +41,31 @@ export async function POST(req: Request) {
 
     const payments = await response.json();
 
+    // ✅ Log so you can debug in Vercel logs
+    console.log("Cashfree payments response:", JSON.stringify(payments));
+
     if (!response.ok) {
       return NextResponse.json(
-        { success: false, message: "Payment verification failed" },
+        { success: false, message: payments?.message || "Payment verification failed" },
         { status: 400 }
       );
     }
 
-    const successfulPayment = Array.isArray(payments)
-      ? payments.find(
-          (p: any) =>
-            p.payment_status === "SUCCESS" ||
-            p.payment_status === "SUCCESSFUL" ||
-            p.payment_status === "CAPTURED"
-        )
-      : null;
+    // ✅ Handle both array AND single object response from Cashfree
+    const paymentsArray = Array.isArray(payments) ? payments : [payments];
+
+    const successfulPayment = paymentsArray.find(
+      (p: any) =>
+        p.payment_status === "SUCCESS" ||
+        p.payment_status === "SUCCESSFUL" ||
+        p.payment_status === "CAPTURED"
+    );
 
     if (!successfulPayment) {
+      console.log(
+        "No successful payment. Statuses:",
+        paymentsArray.map((p: any) => p.payment_status)
+      );
       return NextResponse.json(
         { success: false, message: "Payment not completed" },
         { status: 402 }
@@ -63,7 +74,6 @@ export async function POST(req: Request) {
 
     const purchaseId = `${userId}_${courseId}`;
 
-    // ✅ Save purchase
     await db.collection("purchases").doc(purchaseId).set({
       userId,
       courseId,
@@ -74,11 +84,9 @@ export async function POST(req: Request) {
       createdAt: new Date(),
     });
 
-    // ✅ Update user's purchasedCourses
+    // ✅ Fixed FieldValue import
     await db.collection("users").doc(userId).set(
-      {
-        purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
-      },
+      { purchasedCourses: FieldValue.arrayUnion(courseId) },
       { merge: true }
     );
 
@@ -88,13 +96,11 @@ export async function POST(req: Request) {
     });
 
   } catch (error) {
-
     console.error("Verify Payment Error:", error);
-
     return NextResponse.json(
       { success: false, message: "Server error" },
       { status: 500 }
     );
-
   }
 }
+

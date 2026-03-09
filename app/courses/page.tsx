@@ -935,7 +935,7 @@ const courses = [
     color: "#64748b",
     gradientFrom: "#334155",
     gradientTo: "#64748b",
-    price: 19,
+    price: 9,
     originalPrice: 2999,
     description: "Understand what happens under the hood of every program and OS. C is not a course-it's a superpower that makes every other language click.",
     students: 1500,

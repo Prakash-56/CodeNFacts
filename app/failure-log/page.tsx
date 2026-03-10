@@ -168,6 +168,18 @@ We placed 3rd. We should have won. The judges said the architecture "felt incons
 
 const CATS = ["ALL CASES", "HUMAN ERROR", "DEPLOYMENT", "OPERATOR ERROR", "INTERVIEW", "SECURITY", "TEAM"];
 
+// ─── HOOKS ────────────────────────────────────────────────────────────────────
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
+
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const [vis, setVis] = useState(false);
@@ -221,8 +233,10 @@ function Typewriter({ text, speed = 24 }: { text: string; speed?: number }) {
 // ─── CARD ─────────────────────────────────────────────────────────────────────
 function IncidentCard({ f, idx, onOpen }: { f: typeof FAILURES[0]; idx: number; onOpen: () => void }) {
   const [hov, setHov] = useState(false);
+  const isMobile = useIsMobile();
+
   return (
-    <Reveal delay={idx * 0.08}>
+    <Reveal delay={isMobile ? 0 : idx * 0.08}>
       <div
         onClick={onOpen}
         onMouseEnter={() => setHov(true)}
@@ -232,12 +246,13 @@ function IncidentCard({ f, idx, onOpen }: { f: typeof FAILURES[0]; idx: number; 
           border: `1px solid ${C.rule}`,
           borderTop: `5px solid ${hov ? C.acid : f.accentColor}`,
           cursor: "pointer",
-          padding: "26px 28px 22px",
+          padding: isMobile ? "20px 18px 18px" : "26px 28px 22px",
           position: "relative",
           boxShadow: hov ? `5px 5px 0 ${C.ink}` : `2px 2px 0 ${C.rule}`,
           transform: hov ? "translate(-2px,-2px)" : "translate(0,0)",
           transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)",
           overflow: "hidden",
+          WebkitTapHighlightColor: "transparent",
         }}
       >
         {/* Ruled paper lines */}
@@ -255,8 +270,8 @@ function IncidentCard({ f, idx, onOpen }: { f: typeof FAILURES[0]; idx: number; 
         }} />
 
         {/* Meta row */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, position: "relative", zIndex: 1 }}>
-          <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, position: "relative", zIndex: 1, gap: 8 }}>
+          <div style={{ minWidth: 0 }}>
             <div style={{ fontFamily: "'Special Elite', 'Courier New', serif", fontSize: 11, letterSpacing: 3, color: f.accentColor }}>{f.id}</div>
             <div style={{ fontFamily: "'Courier New', monospace", fontSize: 10, color: C.faded, letterSpacing: 2, marginTop: 2 }}>{f.caseDate}</div>
           </div>
@@ -265,10 +280,14 @@ function IncidentCard({ f, idx, onOpen }: { f: typeof FAILURES[0]; idx: number; 
             padding: "3px 9px", transform: "rotate(-1.5deg)",
             background: hov ? f.accentColor : "transparent",
             transition: "background 0.2s",
+            flexShrink: 0,
           }}>
             <span style={{
-              fontFamily: "'Special Elite', serif", fontSize: 9, letterSpacing: 3,
+              fontFamily: "'Special Elite', serif",
+              fontSize: isMobile ? 8 : 9,
+              letterSpacing: isMobile ? 1 : 3,
               color: hov ? C.paper : f.accentColor, transition: "color 0.2s",
+              whiteSpace: "nowrap",
             }}>{f.classification}</span>
           </div>
         </div>
@@ -276,21 +295,21 @@ function IncidentCard({ f, idx, onOpen }: { f: typeof FAILURES[0]; idx: number; 
         {/* Title */}
         <h3 style={{
           fontFamily: "'Playfair Display', serif",
-          fontSize: "clamp(16px, 2.2vw, 20px)",
+          fontSize: isMobile ? "17px" : "clamp(16px, 2.2vw, 20px)",
           fontWeight: 900, lineHeight: 1.25, color: C.ink,
           marginBottom: 6, position: "relative", zIndex: 1,
         }}>{f.title}</h3>
 
         {/* Subtitle */}
         <div style={{
-          fontFamily: "'Courier New', monospace", fontSize: 11.5,
+          fontFamily: "'Courier New', monospace", fontSize: isMobile ? 11 : 11.5,
           color: C.faded, fontStyle: "italic", marginBottom: 14,
           lineHeight: 1.5, position: "relative", zIndex: 1,
         }}>{f.subtitle}</div>
 
         {/* Excerpt */}
         <p style={{
-          fontFamily: "'Courier New', monospace", fontSize: 12.5,
+          fontFamily: "'Courier New', monospace", fontSize: isMobile ? 12 : 12.5,
           lineHeight: 1.8, color: C.ink2, marginBottom: 18,
           position: "relative", zIndex: 1,
         }}>{f.excerpt}</p>
@@ -310,12 +329,13 @@ function IncidentCard({ f, idx, onOpen }: { f: typeof FAILURES[0]; idx: number; 
           display: "flex", justifyContent: "space-between", alignItems: "center",
           paddingTop: 14, borderTop: `1px dashed ${C.rule}`,
           position: "relative", zIndex: 1,
+          gap: 8,
         }}>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div style={{ fontFamily: "'Special Elite', serif", fontSize: 13, color: C.ink }}>{f.author}</div>
             <div style={{ fontFamily: "'Courier New', monospace", fontSize: 10, color: C.faded, letterSpacing: 1 }}>{f.role}</div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 10 : 14, flexShrink: 0 }}>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontFamily: "'Courier New', monospace", fontSize: 9, color: C.faded, letterSpacing: 2 }}>DOWNTIME</div>
               <div style={{ fontFamily: "'Special Elite', serif", fontSize: 15, color: f.accentColor, fontWeight: 900 }}>{f.duration}</div>
@@ -342,6 +362,7 @@ function IncidentCard({ f, idx, onOpen }: { f: typeof FAILURES[0]; idx: number; 
 // ─── MODAL ────────────────────────────────────────────────────────────────────
 function IncidentModal({ f, onClose }: { f: typeof FAILURES[0]; onClose: () => void }) {
   const [vis, setVis] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     setVis(true);
@@ -357,12 +378,17 @@ function IncidentModal({ f, onClose }: { f: typeof FAILURES[0]; onClose: () => v
 
   const close = () => { setVis(false); setTimeout(onClose, 350); };
 
+  const px = isMobile ? "18px 16px" : "28px 34px 36px";
+  const headerPx = isMobile ? "20px 16px 18px" : "30px 34px 22px";
+
   return (
     <div
       onClick={close}
       style={{
         position: "fixed", inset: 0, zIndex: 9999,
-        display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+        display: "flex", alignItems: isMobile ? "flex-end" : "center",
+        justifyContent: "center",
+        padding: isMobile ? 0 : 20,
         background: `rgba(14,12,9,${vis ? 0.72 : 0})`,
         backdropFilter: `blur(${vis ? 5 : 0}px)`,
         transition: "all 0.35s ease",
@@ -371,27 +397,41 @@ function IncidentModal({ f, onClose }: { f: typeof FAILURES[0]; onClose: () => v
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          width: "100%", maxWidth: 740,
-          maxHeight: "92vh", overflowY: "auto",
+          width: "100%",
+          maxWidth: isMobile ? "100%" : 740,
+          maxHeight: isMobile ? "92vh" : "92vh",
+          overflowY: "auto",
           background: C.paper,
-          // FIX: removed duplicate borderTop — use border shorthand then override borderTop once
           border: `1px solid ${C.rule}`,
           borderTop: `6px solid ${f.accentColor}`,
           boxShadow: `10px 10px 0 ${C.ink}`,
+          borderRadius: isMobile ? "12px 12px 0 0" : 0,
           opacity: vis ? 1 : 0,
-          transform: vis ? "translateY(0) rotate(0deg)" : "translateY(32px) rotate(1.2deg)",
+          transform: vis
+            ? "translateY(0) rotate(0deg)"
+            : isMobile
+              ? "translateY(60px)"
+              : "translateY(32px) rotate(1.2deg)",
           transition: "all 0.4s cubic-bezier(0.22,1,0.36,1)",
+          WebkitOverflowScrolling: "touch",
         }}
       >
+        {/* Drag handle on mobile */}
+        {isMobile && (
+          <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: C.rule }} />
+          </div>
+        )}
+
         {/* Modal header */}
-        <div style={{ padding: "30px 34px 22px", borderBottom: `2px solid ${C.rule}` }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
-            <div style={{ display: "flex", gap: 10 }}>
-              <div style={{ border: `2px solid ${f.accentColor}`, padding: "4px 10px" }}>
-                <span style={{ fontFamily: "'Special Elite', serif", fontSize: 10, letterSpacing: 3, color: f.accentColor }}>{f.id}</span>
+        <div style={{ padding: headerPx, borderBottom: `2px solid ${C.rule}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", minWidth: 0 }}>
+              <div style={{ border: `2px solid ${f.accentColor}`, padding: "4px 10px", flexShrink: 0 }}>
+                <span style={{ fontFamily: "'Special Elite', serif", fontSize: 10, letterSpacing: isMobile ? 1 : 3, color: f.accentColor }}>{f.id}</span>
               </div>
-              <div style={{ border: `2px solid ${f.accentColor}`, padding: "4px 10px", transform: "rotate(-1deg)" }}>
-                <span style={{ fontFamily: "'Special Elite', serif", fontSize: 10, letterSpacing: 3, color: f.accentColor }}>{f.classification}</span>
+              <div style={{ border: `2px solid ${f.accentColor}`, padding: "4px 10px", transform: "rotate(-1deg)", flexShrink: 0 }}>
+                <span style={{ fontFamily: "'Special Elite', serif", fontSize: 10, letterSpacing: isMobile ? 1 : 3, color: f.accentColor }}>{f.classification}</span>
               </div>
             </div>
             <button
@@ -400,7 +440,8 @@ function IncidentModal({ f, onClose }: { f: typeof FAILURES[0]; onClose: () => v
                 background: C.ink, color: C.paper, border: "none",
                 width: 30, height: 30, cursor: "pointer", fontSize: 16,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "background 0.15s",
+                transition: "background 0.15s", flexShrink: 0,
+                borderRadius: 2,
               }}
               onMouseEnter={e => (e.currentTarget.style.background = f.accentColor)}
               onMouseLeave={e => (e.currentTarget.style.background = C.ink)}
@@ -409,24 +450,25 @@ function IncidentModal({ f, onClose }: { f: typeof FAILURES[0]; onClose: () => v
 
           <h2 style={{
             fontFamily: "'Playfair Display', serif",
-            fontSize: "clamp(20px,3.5vw,32px)", fontWeight: 900,
+            fontSize: isMobile ? "22px" : "clamp(20px,3.5vw,32px)",
+            fontWeight: 900,
             color: C.ink, lineHeight: 1.2, marginBottom: 8,
           }}>{f.title}</h2>
-          <p style={{ fontFamily: "'Courier New', monospace", fontSize: 12.5, color: C.faded, fontStyle: "italic", marginBottom: 16 }}>
+          <p style={{ fontFamily: "'Courier New', monospace", fontSize: isMobile ? 12 : 12.5, color: C.faded, fontStyle: "italic", marginBottom: 16 }}>
             {f.subtitle}
           </p>
 
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: isMobile ? 14 : 20, flexWrap: "wrap" }}>
             {[["Author", f.author], ["Role", f.role], ["Date", f.caseDate], ["Downtime", f.duration], ["Severity", f.severity]].map(([k, v]) => (
               <div key={k}>
                 <div style={{ fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: 2, color: C.faded }}>{k}</div>
-                <div style={{ fontFamily: "'Special Elite', serif", fontSize: 13.5, color: C.ink }}>{v}</div>
+                <div style={{ fontFamily: "'Special Elite', serif", fontSize: isMobile ? 12 : 13.5, color: C.ink }}>{v}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div style={{ padding: "28px 34px 36px" }}>
+        <div style={{ padding: px }}>
           {/* Section label */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
             <div style={{ height: 1, flex: 1, background: f.accentColor, opacity: 0.3 }} />
@@ -437,11 +479,16 @@ function IncidentModal({ f, onClose }: { f: typeof FAILURES[0]; onClose: () => v
           {/* Ruled paper story */}
           <div style={{
             background: `repeating-linear-gradient(${C.paper} 0px, ${C.paper} 27px, ${C.rule}44 27px, ${C.rule}44 28px)`,
-            padding: "6px 14px 6px 44px", borderLeft: `4px solid ${f.accentColor}22`,
+            padding: isMobile ? "6px 10px 6px 28px" : "6px 14px 6px 44px",
+            borderLeft: `4px solid ${f.accentColor}22`,
             position: "relative", marginBottom: 28,
           }}>
-            <div style={{ position: "absolute", left: 34, top: 0, bottom: 0, width: 2, background: "rgba(192,57,43,0.12)" }} />
-            <p style={{ fontFamily: "'Courier New', monospace", fontSize: 13.5, lineHeight: "28px", color: C.ink2, whiteSpace: "pre-line" }}>
+            <div style={{ position: "absolute", left: isMobile ? 22 : 34, top: 0, bottom: 0, width: 2, background: "rgba(192,57,43,0.12)" }} />
+            <p style={{
+              fontFamily: "'Courier New', monospace",
+              fontSize: isMobile ? 12.5 : 13.5,
+              lineHeight: "28px", color: C.ink2, whiteSpace: "pre-line",
+            }}>
               {f.story}
             </p>
           </div>
@@ -449,7 +496,7 @@ function IncidentModal({ f, onClose }: { f: typeof FAILURES[0]; onClose: () => v
           {/* Lesson */}
           <div style={{
             background: C.acid + "1A", border: `2px solid ${C.acid}`,
-            borderLeft: `6px solid ${C.acidDim}`, padding: "18px 22px",
+            borderLeft: `6px solid ${C.acidDim}`, padding: isMobile ? "16px 14px" : "18px 22px",
             position: "relative", marginBottom: 16,
           }}>
             <div style={{
@@ -457,16 +504,17 @@ function IncidentModal({ f, onClose }: { f: typeof FAILURES[0]; onClose: () => v
               background: C.paper, padding: "0 8px",
               fontFamily: "'Special Elite', serif", fontSize: 10, letterSpacing: 3, color: C.acidDim,
             }}>▸ KEY LESSON</div>
-            <p style={{ fontFamily: "'Courier New', monospace", fontSize: 13.5, lineHeight: 1.9, color: C.ink }}>{f.lesson}</p>
+            <p style={{ fontFamily: "'Courier New', monospace", fontSize: isMobile ? 12.5 : 13.5, lineHeight: 1.9, color: C.ink }}>{f.lesson}</p>
           </div>
 
           {/* Impact */}
           <div style={{
             padding: "12px 16px", background: "rgba(0,0,0,0.04)",
             border: `1px dashed ${C.rule}`, display: "flex", gap: 12, marginBottom: 20,
+            flexWrap: isMobile ? "wrap" : "nowrap",
           }}>
             <span style={{ fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: 2, color: C.faded, whiteSpace: "nowrap", paddingTop: 2 }}>IMPACT:</span>
-            <span style={{ fontFamily: "'Courier New', monospace", fontSize: 13, color: C.ink2, lineHeight: 1.6 }}>{f.impact}</span>
+            <span style={{ fontFamily: "'Courier New', monospace", fontSize: isMobile ? 12 : 13, color: C.ink2, lineHeight: 1.6 }}>{f.impact}</span>
           </div>
 
           {/* Tags */}
@@ -490,6 +538,8 @@ export default function FailureLog() {
   const [cat, setCat] = useState("ALL CASES");
   const [open, setOpen] = useState<typeof FAILURES[0] | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => { setTimeout(() => setMounted(true), 80); }, []);
 
@@ -503,7 +553,6 @@ export default function FailureLog() {
 
   return (
     <>
-      {/* FIX: replaced <style jsx> with plain <style> tag — jsx prop requires styled-jsx which isn't installed */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Playfair+Display:ital,wght@0,400;0,900;1,400&display=swap');
 
@@ -514,11 +563,21 @@ export default function FailureLog() {
           100% { transform: rotate(-1deg) scale(1); opacity:1; }
         }
 
+        * { box-sizing: border-box; }
+
         .fl-mscroll::-webkit-scrollbar { width: 6px; }
         .fl-mscroll::-webkit-scrollbar-track { background: ${C.paper2}; }
         .fl-mscroll::-webkit-scrollbar-thumb { background: ${C.rule}; }
 
         .catbtn:hover { background: ${C.ink} !important; color: ${C.acid} !important; }
+
+        @media (max-width: 767px) {
+          .hero-grid { grid-template-columns: 1fr !important; }
+          .deck-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+          .case-summary-box { display: none !important; }
+          .stamp-cluster { display: none !important; }
+          .cta-grid { flex-direction: column !important; gap: 32px !important; }
+        }
       `}</style>
 
       <div style={{ background: C.paper, minHeight: "100vh", isolation: "isolate", position: "relative" }}>
@@ -536,61 +595,65 @@ export default function FailureLog() {
           <div style={{ height: 3, background: C.acid }} />
           <div style={{ height: 1, background: C.ink }} />
 
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "44px 5% 0" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "24px 4% 0" : "44px 5% 0" }}>
 
             {/* Top kicker bar */}
             <div style={{
-              display: "flex", alignItems: "center", gap: 0,
-              marginBottom: 24,
+              display: "flex", alignItems: "center",
+              marginBottom: 20,
               opacity: mounted ? 1 : 0, transition: "opacity 0.6s ease 0.2s",
-              borderBottom: `1px solid ${C.rule}`, paddingBottom: 14,
+              borderBottom: `1px solid ${C.rule}`, paddingBottom: 12,
+              overflowX: "auto", gap: 0,
             }}>
-              <span style={{ fontFamily: "'Courier New', monospace", fontSize: 10, letterSpacing: 4, color: C.faded }}>CodeNFacts</span>
-              <span style={{ width: 1, height: 14, background: C.rule, margin: "0 16px", display: "inline-block" }} />
-              <span style={{ fontFamily: "'Courier New', monospace", fontSize: 10, letterSpacing: 4, color: C.faded }}>FAILURE ARCHIVE</span>
-              <span style={{ width: 1, height: 14, background: C.rule, margin: "0 16px", display: "inline-block" }} />
-              <span style={{ fontFamily: "'Courier New', monospace", fontSize: 10, letterSpacing: 3, color: C.faded }}>VOL. I</span>
-              <div style={{ flex: 1, height: 1, background: C.rule, marginLeft: 20 }} />
+              <span style={{ fontFamily: "'Courier New', monospace", fontSize: isMobile ? 9 : 10, letterSpacing: isMobile ? 2 : 4, color: C.faded, whiteSpace: "nowrap" }}>CodeNFacts</span>
+              <span style={{ width: 1, height: 14, background: C.rule, margin: "0 12px", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ fontFamily: "'Courier New', monospace", fontSize: isMobile ? 9 : 10, letterSpacing: isMobile ? 2 : 4, color: C.faded, whiteSpace: "nowrap" }}>FAILURE ARCHIVE</span>
+              <span style={{ width: 1, height: 14, background: C.rule, margin: "0 12px", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ fontFamily: "'Courier New', monospace", fontSize: isMobile ? 9 : 10, letterSpacing: isMobile ? 2 : 3, color: C.faded, whiteSpace: "nowrap" }}>VOL. I</span>
+              <div style={{ flex: 1, height: 1, background: C.rule, marginLeft: 16, minWidth: 20 }} />
               <div style={{
                 background: C.ink, color: C.acid,
-                fontFamily: "'Special Elite', serif", fontSize: 10,
-                letterSpacing: 4, padding: "5px 14px",
+                fontFamily: "'Special Elite', serif", fontSize: isMobile ? 9 : 10,
+                letterSpacing: isMobile ? 2 : 4, padding: isMobile ? "4px 10px" : "5px 14px",
+                flexShrink: 0,
               }}>RESTRICTED</div>
             </div>
 
             {/* Giant editorial headline */}
-            <div style={{
-              display: "grid", gridTemplateColumns: "1fr auto",
-              gap: "0 40px", alignItems: "start",
-              borderBottom: `3px double ${C.ink}`, paddingBottom: 28, marginBottom: 32,
+            <div className="hero-grid" style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
+              gap: isMobile ? "0" : "0 40px", alignItems: "start",
+              borderBottom: `3px double ${C.ink}`, paddingBottom: isMobile ? 20 : 28, marginBottom: isMobile ? 20 : 32,
             }}>
               <h1 style={{
                 fontFamily: "'Playfair Display', serif",
-                fontSize: "clamp(60px, 12vw, 140px)",
-                fontWeight: 900, lineHeight: 0.9, letterSpacing: -4,
+                fontSize: isMobile ? "clamp(52px, 18vw, 90px)" : "clamp(60px, 12vw, 140px)",
+                fontWeight: 900, lineHeight: 0.9, letterSpacing: isMobile ? -2 : -4,
                 color: C.ink,
                 opacity: mounted ? 1 : 0,
                 transform: mounted ? "none" : "translateY(20px)",
                 transition: "all 1s cubic-bezier(0.22,1,0.36,1) 0.3s",
+                marginBottom: isMobile ? 16 : 0,
               }}>
                 THE<br />
                 <span style={{ position: "relative", display: "inline-block" }}>
                   FAILURE
                   <span style={{
-                    position: "absolute", bottom: 2, left: 0, height: 10,
+                    position: "absolute", bottom: 2, left: 0, height: isMobile ? 7 : 10,
                     background: C.acid, zIndex: -1,
                     width: mounted ? "100%" : "0%",
                     transition: "width 1.1s cubic-bezier(0.22,1,0.36,1) 1.1s",
                   }} />
                 </span>
                 <br />
-                <span style={{ color: C.faded, fontSize: "0.52em", letterSpacing: -1 }}>
+                <span style={{ color: C.faded, fontSize: "0.52em", letterSpacing: isMobile ? -0.5 : -1 }}>
                   LOG.
                 </span>
               </h1>
 
-              {/* Right sidebar info box */}
-              <div style={{
+              {/* Right sidebar info box — hidden on mobile via CSS class */}
+              <div className="case-summary-box" style={{
                 width: 220, paddingTop: 8,
                 opacity: mounted ? 1 : 0, transition: "opacity 0.8s ease 0.9s",
               }}>
@@ -620,28 +683,54 @@ export default function FailureLog() {
                   &ldquo;Every catastrophe is a lesson that refused to be ignored.&rdquo;
                 </div>
               </div>
+
+              {/* Mobile-only summary strip */}
+              {isMobile && (
+                <div style={{
+                  display: "flex", gap: 0, overflowX: "auto",
+                  borderTop: `1px solid ${C.rule}`, borderBottom: `1px solid ${C.rule}`,
+                  marginBottom: 16,
+                  opacity: mounted ? 1 : 0, transition: "opacity 0.8s ease 0.9s",
+                }}>
+                  {[["06", "INCIDENTS"], ["186+", "HRS LOST"], ["5K+", "DEVS SAVED"], ["06", "LESSONS"]].map(([v, k]) => (
+                    <div key={k} style={{
+                      flex: 1, padding: "10px 6px", textAlign: "center",
+                      borderRight: `1px solid ${C.rule}`,
+                    }}>
+                      <div style={{ fontFamily: "'Special Elite', serif", fontSize: 16, color: C.stamp1, fontWeight: 900 }}>{v}</div>
+                      <div style={{ fontFamily: "'Courier New', monospace", fontSize: 8, color: C.faded, letterSpacing: 1 }}>{k}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Deck */}
-            <div style={{
-              display: "grid", gridTemplateColumns: "3fr 2fr", gap: 40,
-              marginBottom: 32, alignItems: "end",
+            <div className="deck-grid" style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "3fr 2fr",
+              gap: isMobile ? 16 : 40,
+              marginBottom: isMobile ? 24 : 32, alignItems: "end",
               opacity: mounted ? 1 : 0, transition: "opacity 0.8s ease 0.7s",
             }}>
               <p style={{
                 fontFamily: "'Special Elite', serif",
-                fontSize: "clamp(15px, 2vw, 20px)",
+                fontSize: isMobile ? "14px" : "clamp(15px, 2vw, 20px)",
                 lineHeight: 1.65, color: C.ink2,
-                borderLeft: `5px solid ${C.acid}`, paddingLeft: 18,
+                borderLeft: `5px solid ${C.acid}`, paddingLeft: 14,
               }}>
-                Every catastrophic mistake here was a developer&apos;s darkest hour. Documented publicly &mdash; anonymized, analyzed, filed &mdash; so you don&apos;t have to live through them yourself.
+                Every catastrophic mistake here was a developer&apos;s darkest hour. Documented publicly-anonymized, analyzed, filed - so you don&apos;t have to live through them yourself.
               </p>
-              <div style={{
-                fontFamily: "'Courier New', monospace", fontSize: 11.5,
-                color: C.faded, lineHeight: 1.8,
-              }}>
-                <Typewriter text="> ARCHIVE INITIALIZED. 6 CASES LOADED. CLICK ANY REPORT TO READ." speed={20} />
-              </div>
+              {!isMobile && (
+                <div style={{ fontFamily: "'Courier New', monospace", fontSize: 11.5, color: C.faded, lineHeight: 1.8 }}>
+                  <Typewriter text="> ARCHIVE INITIALIZED. 6 CASES LOADED. CLICK ANY REPORT TO READ." speed={20} />
+                </div>
+              )}
+              {isMobile && (
+                <div style={{ fontFamily: "'Courier New', monospace", fontSize: 10.5, color: C.faded, lineHeight: 1.8 }}>
+                  <Typewriter text="> 6 CASES LOADED. TAP ANY REPORT." speed={30} />
+                </div>
+              )}
             </div>
 
             {/* Three-column rule */}
@@ -655,38 +744,77 @@ export default function FailureLog() {
 
         {/* ── NAV FILTER ── */}
         <div style={{ position: "relative", zIndex: 2, background: C.ink }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 5%", display: "flex", gap: 0, overflowX: "auto" }}>
-            {CATS.map(c => (
-              <button key={c} className="catbtn" onClick={() => setCat(c)} style={{
-                fontFamily: "'Special Elite', serif", fontSize: 10,
-                letterSpacing: 2, padding: "13px 16px",
-                background: cat === c ? C.acid : "transparent",
-                color: cat === c ? C.ink : "rgba(245,240,232,0.4)",
-                border: "none", cursor: "pointer",
-                borderRight: "1px solid rgba(255,255,255,0.07)",
-                whiteSpace: "nowrap", transition: "all 0.18s",
-              }}>{c}</button>
-            ))}
-            <div style={{ flex: 1 }} />
+          {/* Mobile: scrollable pill row */}
+          {isMobile ? (
             <div style={{
-              display: "flex", alignItems: "center",
-              fontFamily: "'Courier New', monospace", fontSize: 10,
-              color: "rgba(245,240,232,0.3)", letterSpacing: 2, padding: "0 16px",
-            }}>{filtered.length} ON FILE</div>
-          </div>
+              maxWidth: 1200, margin: "0 auto",
+              padding: "0 4%",
+              display: "flex", gap: 0,
+              overflowX: "auto",
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "none",
+            }}>
+              {CATS.map(c => (
+                <button key={c} onClick={() => setCat(c)} style={{
+                  fontFamily: "'Special Elite', serif", fontSize: 9,
+                  letterSpacing: 1.5, padding: "12px 12px",
+                  background: cat === c ? C.acid : "transparent",
+                  color: cat === c ? C.ink : "rgba(245,240,232,0.45)",
+                  border: "none", cursor: "pointer",
+                  borderRight: "1px solid rgba(255,255,255,0.07)",
+                  whiteSpace: "nowrap", transition: "all 0.18s",
+                  WebkitTapHighlightColor: "transparent",
+                }}>{c}</button>
+              ))}
+              <div style={{ flex: 1 }} />
+              <div style={{
+                display: "flex", alignItems: "center",
+                fontFamily: "'Courier New', monospace", fontSize: 9,
+                color: "rgba(245,240,232,0.3)", letterSpacing: 1, padding: "0 12px",
+                whiteSpace: "nowrap",
+              }}>{filtered.length} ON FILE</div>
+            </div>
+          ) : (
+            <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 5%", display: "flex", gap: 0, overflowX: "auto" }}>
+              {CATS.map(c => (
+                <button key={c} className="catbtn" onClick={() => setCat(c)} style={{
+                  fontFamily: "'Special Elite', serif", fontSize: 10,
+                  letterSpacing: 2, padding: "13px 16px",
+                  background: cat === c ? C.acid : "transparent",
+                  color: cat === c ? C.ink : "rgba(245,240,232,0.4)",
+                  border: "none", cursor: "pointer",
+                  borderRight: "1px solid rgba(255,255,255,0.07)",
+                  whiteSpace: "nowrap", transition: "all 0.18s",
+                }}>{c}</button>
+              ))}
+              <div style={{ flex: 1 }} />
+              <div style={{
+                display: "flex", alignItems: "center",
+                fontFamily: "'Courier New', monospace", fontSize: 10,
+                color: "rgba(245,240,232,0.3)", letterSpacing: 2, padding: "0 16px",
+              }}>{filtered.length} ON FILE</div>
+            </div>
+          )}
         </div>
 
         {/* ── CARDS ── */}
-        <main style={{ position: "relative", zIndex: 2, maxWidth: 1200, margin: "0 auto", padding: "56px 5% 100px" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginBottom: 36 }}>
-            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, color: C.ink, fontWeight: 900 }}>Incident Archive</h2>
+        <main style={{
+          position: "relative", zIndex: 2, maxWidth: 1200, margin: "0 auto",
+          padding: isMobile ? "32px 4% 80px" : "56px 5% 100px",
+        }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: isMobile ? 24 : 36, flexWrap: "wrap" }}>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: isMobile ? 20 : 26, color: C.ink, fontWeight: 900 }}>Incident Archive</h2>
             <span style={{ fontFamily: "'Courier New', monospace", fontSize: 11, color: C.faded, letterSpacing: 2 }}>
               - {filtered.length} CASE{filtered.length !== 1 ? "S" : ""}
             </span>
-            <div style={{ flex: 1, height: 1, background: C.rule }} />
+            <div style={{ flex: 1, height: 1, background: C.rule, minWidth: 20 }} />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 430px), 1fr))", gap: 22 }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(min(100%, 430px), 1fr))",
+            gap: isMobile ? 16 : 22,
+          }}>
             {filtered.map((f, i) => (
               <IncidentCard key={f.id} f={f} idx={i} onOpen={() => setOpen(f)} />
             ))}
@@ -696,30 +824,37 @@ export default function FailureLog() {
         {/* ── CTA / SUBMIT ── */}
         <div style={{ position: "relative", zIndex: 2 }}>
           <TornEdge />
-          <section style={{ background: C.ink, padding: "72px 5% 80px" }}>
+          <section style={{ background: C.ink, padding: isMobile ? "48px 4% 56px" : "72px 5% 80px" }}>
             <div style={{ maxWidth: 1000, margin: "0 auto" }}>
               <Reveal>
-                <div style={{ display: "flex", gap: 60, alignItems: "center", flexWrap: "wrap" }}>
-                  <div style={{ flex: 1, minWidth: 280 }}>
+                <div className="cta-grid" style={{ display: "flex", gap: isMobile ? 28 : 60, alignItems: "center", flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, minWidth: isMobile ? "100%" : 280 }}>
                     <h2 style={{
                       fontFamily: "'Playfair Display', serif",
-                      fontSize: "clamp(34px, 6vw, 68px)",
-                      fontWeight: 900, color: C.paper, lineHeight: 1.0, marginBottom: 20,
+                      fontSize: isMobile ? "clamp(34px, 12vw, 56px)" : "clamp(34px, 6vw, 68px)",
+                      fontWeight: 900, color: C.paper, lineHeight: 1.0, marginBottom: 16,
                     }}>
                       Your failure<br />
                       <span style={{ color: C.acid }}>saves</span><br />
                       thousands.
                     </h2>
-                    <p style={{ fontFamily: "'Courier New', monospace", fontSize: 13, color: "rgba(245,240,232,0.45)", lineHeight: 1.9, marginBottom: 30 }}>
+                    <p style={{
+                      fontFamily: "'Courier New', monospace",
+                      fontSize: isMobile ? 12 : 13,
+                      color: "rgba(245,240,232,0.45)", lineHeight: 1.9, marginBottom: 28,
+                    }}>
                       Submit your worst debugging nightmare, deployment disaster, or interview breakdown. Anonymized. Documented. Turned into leverage for the next developer.
                     </p>
                     <a
                       href="/submit-case"
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 12,
-                        fontFamily: "'Special Elite', serif", fontSize: 13,
-                        letterSpacing: 3, background: C.acid, color: C.ink,
-                        padding: "16px 32px", textDecoration: "none",
+                        fontFamily: "'Special Elite', serif",
+                        fontSize: isMobile ? 12 : 13,
+                        letterSpacing: isMobile ? 2 : 3,
+                        background: C.acid, color: C.ink,
+                        padding: isMobile ? "14px 24px" : "16px 32px",
+                        textDecoration: "none",
                         boxShadow: `5px 5px 0 ${C.acidDim}`,
                         transition: "all 0.18s ease",
                       }}
@@ -734,8 +869,8 @@ export default function FailureLog() {
                     >SUBMIT YOUR CASE →</a>
                   </div>
 
-                  {/* Stamp cluster */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 14, alignItems: "flex-start" }}>
+                  {/* Stamp cluster — hidden on mobile via CSS */}
+                  <div className="stamp-cluster" style={{ display: "flex", flexDirection: "column", gap: 14, alignItems: "flex-start" }}>
                     {[
                       { t: "CLASSIFIED", c: C.stamp1, r: -4, delay: "0.1s" },
                       { t: "CASE CLOSED", c: C.stamp2, r: 3, delay: "0.25s" },

@@ -1,367 +1,718 @@
 'use client';
 
-import { motion, useScroll, useTransform, useSpring, useMotionValue, useAnimationFrame } from 'framer-motion';
-import { useRef, useState, useEffect } from 'react';
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  useMotionValue,
+  useAnimationFrame,
+  AnimatePresence,
+} from 'framer-motion';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
+/* ─────────────────────────────── DATA ─────────────────────────────── */
 const signals = [
-  'Mentorship Signals',
-  'Collaboration Requests',
-  'Course Enquiries',
-  'Community Access',
-  'Career Opportunities',
-  'Ideas Worth Building',
+  { label: 'Mentorship', icon: '◈', color: '#a78bfa' },
+  { label: 'Collaboration', icon: '◎', color: '#67e8f9' },
+  { label: 'Course Enquiries', icon: '◇', color: '#f0abfc' },
+  { label: 'Community Access', icon: '△', color: '#86efac' },
+  { label: 'Career Opportunities', icon: '◉', color: '#fbbf24' },
+  { label: 'Ideas Worth Building', icon: '✦', color: '#f9a8d4' },
 ];
 
-// Floating particle
-function Particle({ delay, x, y }: { delay: number; x: number; y: number }) {
+/* ────────────────────────── NOISE CANVAS BG ────────────────────────── */
+function NoiseOverlay() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    const W = (canvas.width = 300);
+    const H = (canvas.height = 300);
+    const img = ctx.createImageData(W, H);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = Math.random() * 255;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+      img.data[i + 3] = 18;
+    }
+    ctx.putImageData(img, 0, 0);
+  }, []);
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ imageRendering: 'pixelated', opacity: 0.45 }}
+    />
+  );
+}
+
+/* ─────────────────────────── MAGNETIC CURSOR ─────────────────────────── */
+function MagneticBlob() {
+  const x = useMotionValue(-400);
+  const y = useMotionValue(-400);
+  const smoothX = useSpring(x, { stiffness: 55, damping: 18 });
+  const smoothY = useSpring(y, { stiffness: 55, damping: 18 });
+
+  useEffect(() => {
+    const move = (e: MouseEvent) => { x.set(e.clientX); y.set(e.clientY); };
+    window.addEventListener('mousemove', move);
+    return () => window.removeEventListener('mousemove', move);
+  }, [x, y]);
+
   return (
     <motion.div
-      className="absolute w-1 h-1 rounded-full bg-cyan-400/60"
-      style={{ left: `${x}%`, top: `${y}%` }}
-      animate={{
-        y: [0, -120, 0],
-        x: [0, Math.random() * 40 - 20, 0],
-        opacity: [0, 1, 0],
-        scale: [0, 1.5, 0],
-      }}
-      transition={{
-        duration: 4 + Math.random() * 3,
-        delay,
-        repeat: Infinity,
-        ease: 'easeInOut',
+      className="fixed pointer-events-none z-[1] hidden md:block"
+      style={{
+        left: smoothX,
+        top: smoothY,
+        translateX: '-50%',
+        translateY: '-50%',
+        width: 420,
+        height: 420,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(167,139,250,0.07) 0%, transparent 70%)',
+        filter: 'blur(2px)',
       }}
     />
   );
 }
 
-// A single card that orbits in 3D
-function OrbitCard({ text, index, total, hovered }: { text: string; index: number; total: number; hovered: boolean }) {
-  const angle = (360 / total) * index;
+/* ──────────────────────────── WARP GRID ──────────────────────────────── */
+function WarpGrid() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ perspective: '800px' }}>
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(167,139,250,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(167,139,250,0.04) 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px',
+          transformOrigin: '50% 0%',
+          rotateX: '60deg',
+          translateY: '-10%',
+          scaleY: 2.5,
+        }}
+        animate={{
+          backgroundPositionY: ['0px', '60px'],
+        }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+      />
+      <div
+        className="absolute bottom-0 left-0 right-0 h-[50%]"
+        style={{ background: 'linear-gradient(to top, #05030f 30%, transparent)' }}
+      />
+    </div>
+  );
+}
+
+/* ──────────────────────────── SIGNAL CARD ──────────────────────────── */
+function SignalCard({
+  item,
+  isActive,
+  onClick,
+  index,
+  total,
+}: {
+  item: (typeof signals)[0];
+  isActive: boolean;
+  onClick: () => void;
+  index: number;
+  total: number;
+}) {
+  const angle = (360 / total) * index - 90;
   const rad = (angle * Math.PI) / 180;
-  const rx = 240; // x-radius of ellipse
-  const ry = 80;  // y-radius (foreshortened for 3D feel)
-  
-  const cx = Math.cos(rad) * rx;
-  const cy = Math.sin(rad) * ry;
-  
-  // Depth: items at back are smaller/dimmer
-  const depth = (Math.sin(rad) + 1) / 2; // 0 = back, 1 = front
+
+  // Responsive radii
+  const rx = typeof window !== 'undefined' && window.innerWidth < 640 ? 115 : 200;
+  const ry = typeof window !== 'undefined' && window.innerWidth < 640 ? 115 : 200;
+
+  const baseX = Math.cos(rad) * rx;
+  const baseY = Math.sin(rad) * ry;
 
   return (
-    <motion.div
-      className="absolute left-1/2 top-1/2"
+    <motion.button
+      onClick={onClick}
+      className="absolute focus:outline-none"
       style={{
-        x: cx - 90,
-        y: cy - 20,
-        zIndex: Math.round(depth * 10),
+        left: '50%',
+        top: '50%',
+        x: baseX - (typeof window !== 'undefined' && window.innerWidth < 640 ? 52 : 70),
+        y: baseY - (typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 26),
       }}
-      animate={{
-        opacity: hovered ? 1 : 0.3 + depth * 0.7,
-        scale: hovered ? 1 + depth * 0.15 : 0.85 + depth * 0.2,
-      }}
-      transition={{ duration: 0.4 }}
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 0.4 + index * 0.1, type: 'spring', stiffness: 200, damping: 20 }}
+      whileHover={{ scale: 1.12, zIndex: 10 }}
+      whileTap={{ scale: 0.95 }}
     >
       <motion.div
-        className="w-[180px] px-4 py-2.5 rounded-xl text-center cursor-default select-none"
-        style={{
-          background: `rgba(${Math.round(10 + depth * 20)}, ${Math.round(20 + depth * 30)}, ${Math.round(40 + depth * 60)}, ${0.4 + depth * 0.5})`,
-          border: `1px solid rgba(100, 200, 255, ${0.1 + depth * 0.4})`,
-          backdropFilter: 'blur(8px)',
-          boxShadow: `0 0 ${12 + depth * 24}px rgba(56,189,248,${0.05 + depth * 0.2})`,
+        animate={{
+          background: isActive
+            ? `linear-gradient(135deg, ${item.color}22, ${item.color}44)`
+            : 'rgba(10,8,25,0.7)',
+          borderColor: isActive ? item.color : 'rgba(167,139,250,0.15)',
+          boxShadow: isActive
+            ? `0 0 24px ${item.color}55, 0 0 60px ${item.color}22, inset 0 1px 0 ${item.color}33`
+            : '0 0 0px transparent',
         }}
-        whileHover={{
-          scale: 1.08,
-          boxShadow: '0 0 32px rgba(56,189,248,0.5)',
-        }}
+        transition={{ duration: 0.4 }}
+        className="rounded-xl border px-3 py-2 sm:px-4 sm:py-2.5 flex items-center gap-2 sm:gap-2.5 cursor-pointer"
+        style={{ backdropFilter: 'blur(16px)', minWidth: 104, maxWidth: 140 }}
       >
-        <span
-          className="text-xs sm:text-sm font-semibold tracking-wide"
+        <motion.span
+          animate={{ color: isActive ? item.color : 'rgba(167,139,250,0.5)' }}
+          className="text-base sm:text-lg leading-none flex-shrink-0"
+          style={{ fontFamily: 'monospace' }}
+        >
+          {item.icon}
+        </motion.span>
+        <motion.span
+          animate={{ color: isActive ? '#fff' : 'rgba(200,190,255,0.55)' }}
+          className="text-[10px] sm:text-xs font-semibold tracking-wide leading-tight text-left"
+          style={{ fontFamily: "'DM Mono', monospace" }}
+        >
+          {item.label}
+        </motion.span>
+
+        {/* Active dot */}
+        <AnimatePresence>
+          {isActive && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
+              style={{ backgroundColor: item.color }}
+            />
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </motion.button>
+  );
+}
+
+/* ──────────────────────── ORBITING RING ──────────────────────── */
+function OrbitRing({ r, dur, reverse, dash, color }: { r: number; dur: number; reverse?: boolean; dash?: string; color?: string }) {
+  return (
+    <motion.div
+      className="absolute rounded-full pointer-events-none"
+      style={{
+        width: r * 2,
+        height: r * 2,
+        left: '50%',
+        top: '50%',
+        marginLeft: -r,
+        marginTop: -r,
+        border: `1px ${dash || 'solid'} ${color || 'rgba(167,139,250,0.08)'}`,
+      }}
+      animate={{ rotate: reverse ? -360 : 360 }}
+      transition={{ duration: dur, repeat: Infinity, ease: 'linear' }}
+    />
+  );
+}
+
+/* ────────────────────── CORE NUCLEUS ────────────────────── */
+function Nucleus({ active }: { active: (typeof signals)[0] | null }) {
+  return (
+    <motion.div
+      className="relative z-20 flex items-center justify-center rounded-full"
+      style={{
+        width: 110,
+        height: 110,
+        background: 'radial-gradient(circle at 38% 32%, #1a0e3a, #08051a)',
+        boxShadow: '0 0 0 1px rgba(167,139,250,0.12), 0 0 60px rgba(167,139,250,0.15)',
+      }}
+      animate={{
+        boxShadow: active
+          ? [
+              `0 0 0 1px ${active.color}44, 0 0 60px ${active.color}30`,
+              `0 0 0 1px ${active.color}88, 0 0 100px ${active.color}50`,
+              `0 0 0 1px ${active.color}44, 0 0 60px ${active.color}30`,
+            ]
+          : '0 0 0 1px rgba(167,139,250,0.12), 0 0 60px rgba(167,139,250,0.15)',
+      }}
+      transition={{ duration: 2, repeat: active ? Infinity : 0 }}
+    >
+      {/* Glass specular */}
+      <div
+        className="absolute top-[12%] left-[18%] w-[35%] h-[22%] rounded-full blur-sm"
+        style={{ background: 'rgba(255,255,255,0.08)' }}
+      />
+
+      {/* Inner rings */}
+      <div className="absolute inset-0 rounded-full" style={{ border: '1px solid rgba(167,139,250,0.08)' }} />
+      <div
+        className="absolute rounded-full"
+        style={{ inset: '12px', border: '1px solid rgba(167,139,250,0.06)' }}
+      />
+
+      {/* Symbol */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={active?.icon || 'default'}
+          initial={{ opacity: 0, scale: 0.4, rotateY: -90 }}
+          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+          exit={{ opacity: 0, scale: 0.4, rotateY: 90 }}
+          transition={{ duration: 0.35, type: 'spring', stiffness: 260, damping: 22 }}
+          className="text-3xl"
           style={{
-            color: `rgba(${Math.round(180 + depth * 75)}, ${Math.round(220 + depth * 35)}, 255, ${0.6 + depth * 0.4})`,
+            color: active ? active.color : 'rgba(167,139,250,0.4)',
+            fontFamily: 'monospace',
+            filter: active ? `drop-shadow(0 0 12px ${active.color})` : 'none',
           }}
         >
-          {text}
-        </span>
-      </motion.div>
+          {active ? active.icon : '✦'}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Pulse ring */}
+      <motion.div
+        className="absolute inset-0 rounded-full"
+        style={{ border: `1px solid ${active ? active.color : 'rgba(167,139,250,0.3)'}` }}
+        animate={{ scale: [1, 1.6], opacity: [0.6, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
+      />
+      <motion.div
+        className="absolute inset-0 rounded-full"
+        style={{ border: `1px solid ${active ? active.color : 'rgba(167,139,250,0.2)'}` }}
+        animate={{ scale: [1, 2.2], opacity: [0.3, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeOut', delay: 0.6 }}
+      />
     </motion.div>
   );
 }
 
-// Animated ring that rotates
-function Ring({ radius, duration, reverse, opacity }: { radius: number; duration: number; reverse?: boolean; opacity: number }) {
+/* ────────────────────── CONNECTOR LINES SVG ────────────────────── */
+function ConnectorLines({ activeIndex }: { activeIndex: number | null }) {
+  const size = 500;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = 200;
+
   return (
-    <motion.div
-      className="absolute left-1/2 top-1/2 rounded-full border"
-      style={{
-        width: radius * 2,
-        height: radius * 2,
-        marginLeft: -radius,
-        marginTop: -radius,
-        borderColor: `rgba(100,200,255,${opacity})`,
-        borderStyle: 'dashed',
-      }}
-      animate={{ rotate: reverse ? -360 : 360 }}
-      transition={{ duration, repeat: Infinity, ease: 'linear' }}
-    />
+    <svg
+      className="absolute pointer-events-none"
+      style={{ width: size, height: size, left: '50%', top: '50%', marginLeft: -cx, marginTop: -cy }}
+      viewBox={`0 0 ${size} ${size}`}
+    >
+      {signals.map((sig, i) => {
+        const angle = (360 / signals.length) * i - 90;
+        const rad = (angle * Math.PI) / 180;
+        const x = cx + Math.cos(rad) * r;
+        const y = cy + Math.sin(rad) * r;
+        const isActive = activeIndex === i;
+
+        return (
+          <motion.line
+            key={i}
+            x1={cx}
+            y1={cy}
+            x2={x}
+            y2={y}
+            stroke={isActive ? sig.color : 'rgba(167,139,250,0.06)'}
+            strokeWidth={isActive ? 1.5 : 0.5}
+            strokeDasharray="4 8"
+            animate={{
+              strokeDashoffset: isActive ? [0, -24] : 0,
+              opacity: isActive ? 1 : activeIndex !== null ? 0.03 : 0.5,
+            }}
+            transition={{ duration: 0.8, repeat: isActive ? Infinity : 0, ease: 'linear' }}
+          />
+        );
+      })}
+    </svg>
   );
 }
 
-export default function GetInTouch() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const orbitRef = useRef<HTMLDivElement>(null);
-  const [hovered, setHovered] = useState(false);
-  const [particles] = useState(() =>
-    Array.from({ length: 30 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      delay: Math.random() * 5,
-    }))
-  );
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start end', 'end start'],
-  });
-
-  // Orbit rotation driven by scroll + auto-spin
-  const autoAngle = useMotionValue(0);
-  useAnimationFrame((t) => {
-    autoAngle.set(t * 0.02); // degrees per ms * ms = continuous
-  });
-
-  const scrollRotate = useTransform(scrollYProgress, [0, 1], [0, 180]);
-  const orbitY = useTransform(scrollYProgress, [0, 0.5, 1], [60, 0, -60]);
-  const headerY = useTransform(scrollYProgress, [0, 0.5], [40, 0]);
-  const headerOpacity = useTransform(scrollYProgress, [0, 0.2], [0, 1]);
-
-  // Mouse parallax
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const smoothX = useSpring(mouseX, { stiffness: 80, damping: 20 });
-  const smoothY = useSpring(mouseY, { stiffness: 80, damping: 20 });
-
-  const rotateX = useTransform(smoothY, [-300, 300], [18, -18]);
-  const rotateY = useTransform(smoothX, [-300, 300], [-18, 18]);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = sectionRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    mouseX.set(e.clientX - rect.left - rect.width / 2);
-    mouseY.set(e.clientY - rect.top - rect.height / 2);
-  };
-
-  const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
-  };
+/* ─────────────────────── GLITCH TEXT ─────────────────────── */
+function GlitchText({ text }: { text: string }) {
+  const [glitch, setGlitch] = useState(false);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGlitch(true);
+      setTimeout(() => setGlitch(false), 180);
+    }, 4200);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <section
-      ref={sectionRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className="relative min-h-[1100px] overflow-hidden bg-[#020510] py-40 px-6 flex flex-col items-center justify-center gap-0"
-    >
-      {/* Deep space bg */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(14,30,80,0.7),transparent)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_40%_40%_at_50%_70%,rgba(0,80,160,0.15),transparent)]" />
-
-      {/* Star field */}
-      {particles.map((p) => (
-        <Particle key={p.id} x={p.x} y={p.y} delay={p.delay} />
-      ))}
-
-      {/* Scan line sweep */}
-      <motion.div
-        className="absolute inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent pointer-events-none"
-        animate={{ top: ['0%', '100%'] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-      />
-
-      {/* HEADER */}
-      <motion.div
-        style={{ y: headerY, opacity: headerOpacity }}
-        className="relative z-10 text-center mb-20"
-      >
-        <div className="inline-flex items-center gap-2 mb-5 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/5">
-          <motion.div
-            className="w-1.5 h-1.5 rounded-full bg-cyan-400"
-            animate={{ opacity: [1, 0.2, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          />
-          <span className="text-cyan-400/80 text-xs tracking-[0.3em] font-mono uppercase">Signal Receiver Active</span>
-        </div>
-        <h2
-          className="text-5xl md:text-7xl font-black text-white mb-4 tracking-tight"
-          style={{ fontFamily: "'Syne', 'Space Grotesk', sans-serif", textShadow: '0 0 60px rgba(56,189,248,0.3)' }}
-        >
-          Get in Touch
-        </h2>
-        <p className="text-cyan-300/50 text-base md:text-lg tracking-[0.15em] font-mono">
-          SELECT YOUR TRANSMISSION TYPE
-        </p>
-      </motion.div>
-
-      {/* 3D ORBIT SYSTEM */}
-      <motion.div
-        style={{ y: orbitY, perspective: 1200 }}
-        className="relative z-10"
-      >
-        <motion.div
-          ref={orbitRef}
-          style={{ rotateX, rotateY }}
-          onHoverStart={() => setHovered(true)}
-          onHoverEnd={() => setHovered(false)}
-          className="relative flex items-center justify-center"
-          animate={{ transition: { type: 'spring' } }}
-        >
-          {/* Orbital rings */}
-          <Ring radius={280} duration={20} opacity={0.08} />
-          <Ring radius={240} duration={14} reverse opacity={0.12} />
-          <Ring radius={190} duration={10} opacity={0.07} />
-
-          {/* Core sphere */}
-          <motion.div
-            className="relative w-[120px] h-[120px] md:w-[150px] md:h-[150px] rounded-full z-20"
-            style={{
-              background: 'radial-gradient(circle at 35% 35%, #1e6fa8, #051228)',
-              boxShadow: '0 0 60px rgba(56,189,248,0.4), 0 0 120px rgba(56,189,248,0.15), inset 0 0 40px rgba(0,0,0,0.8)',
-            }}
-            animate={{
-              boxShadow: hovered
-                ? '0 0 80px rgba(56,189,248,0.7), 0 0 160px rgba(56,189,248,0.3), inset 0 0 40px rgba(0,0,0,0.8)'
-                : '0 0 60px rgba(56,189,248,0.4), 0 0 120px rgba(56,189,248,0.15), inset 0 0 40px rgba(0,0,0,0.8)',
-            }}
-            transition={{ duration: 0.5 }}
+    <div className="relative inline-block">
+      <span className="relative z-10">{text}</span>
+      {glitch && (
+        <>
+          <span
+            className="absolute inset-0 text-[#a78bfa]"
+            style={{ clipPath: 'inset(30% 0 40% 0)', transform: 'translateX(-3px)', opacity: 0.7 }}
+            aria-hidden
           >
-            {/* Specular highlight */}
-            <div className="absolute top-[15%] left-[20%] w-[30%] h-[20%] rounded-full bg-white/20 blur-sm" />
-            {/* Core glow dot */}
-            <motion.div
-              className="absolute inset-0 flex items-center justify-center"
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              <div className="w-4 h-4 rounded-full bg-cyan-300/80 blur-[2px]" />
-            </motion.div>
-
-            {/* Equator ring */}
-            <div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/30"
-              style={{ width: '140%', height: '30%' }}
-            />
-          </motion.div>
-
-          {/* Rotating orbit container */}
-          <motion.div
-            className="absolute"
-            style={{ width: 600, height: 200, left: '50%', top: '50%', marginLeft: -300, marginTop: -100 }}
-            animate={{ rotateY: [0, 360] }}
-            transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+            {text}
+          </span>
+          <span
+            className="absolute inset-0 text-[#67e8f9]"
+            style={{ clipPath: 'inset(60% 0 10% 0)', transform: 'translateX(3px)', opacity: 0.7 }}
+            aria-hidden
           >
-            {signals.map((text, i) => (
-              <OrbitCard key={i} text={text} index={i} total={signals.length} hovered={hovered} />
-            ))}
-          </motion.div>
+            {text}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
 
-          {/* Vertical axis ring */}
-          <motion.div
-            className="absolute rounded-full border border-cyan-400/10"
-            style={{ width: 2, height: 560, left: '50%', top: '50%', marginLeft: -1, marginTop: -280 }}
-            animate={{ rotateX: [0, 360] }}
-            transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-          />
-        </motion.div>
-      </motion.div>
-
-      {/* Data readout lines */}
+/* ─────────────────────── SCROLL MARQUEE ─────────────────────── */
+function Marquee() {
+  const items = ['OPEN TO CONNECT', '✦', 'TRANSMIT YOUR SIGNAL', '✦', 'LET\'S BUILD', '✦', 'OPEN TO CONNECT', '✦', 'TRANSMIT YOUR SIGNAL', '✦', 'LET\'S BUILD', '✦'];
+  return (
+    <div className="relative overflow-hidden py-3 border-y border-purple-500/10">
       <motion.div
-        className="relative z-10 mt-24 flex gap-8 items-center justify-center font-mono text-[10px] tracking-[0.25em] text-cyan-500/30 uppercase"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 1 }}
+        className="flex gap-8 whitespace-nowrap"
+        animate={{ x: ['0%', '-50%'] }}
+        transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
+        style={{ width: 'max-content' }}
       >
-        {['Lat: 51.5°N', 'Long: 0.1°W', 'Alt: ∞', 'Signal: OPEN'].map((d) => (
-          <span key={d}>{d}</span>
+        {[...items, ...items].map((item, i) => (
+          <span
+            key={i}
+            className="text-[10px] sm:text-xs tracking-[0.35em] font-mono"
+            style={{ color: item === '✦' ? 'rgba(167,139,250,0.5)' : 'rgba(167,139,250,0.2)' }}
+          >
+            {item}
+          </span>
         ))}
       </motion.div>
+    </div>
+  );
+}
 
-      {/* CTA */}
-      <motion.div
-        className="relative z-10 mt-10"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 1, delay: 0.3 }}
-      >
-        <motion.a
-          href="/contact"
-          className="relative inline-flex items-center gap-3 px-14 py-5 font-bold text-base tracking-[0.2em] uppercase text-cyan-300 overflow-hidden"
-          style={{ fontFamily: "'Syne', sans-serif" }}
-          whileHover="hover"
-          initial="rest"
+/* ──────────────────────── STATUS BAR ──────────────────────── */
+function StatusBar({ active }: { active: (typeof signals)[0] | null }) {
+  return (
+    <motion.div
+      className="flex items-center gap-3 sm:gap-6 font-mono text-[9px] sm:text-[11px] tracking-[0.2em] flex-wrap justify-center"
+      style={{ color: 'rgba(167,139,250,0.35)' }}
+    >
+      <span className="flex items-center gap-1.5">
+        <motion.div
+          className="w-1.5 h-1.5 rounded-full"
+          style={{ backgroundColor: '#86efac' }}
+          animate={{ opacity: [1, 0.3, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        />
+        RECEIVER ONLINE
+      </span>
+      <span>|</span>
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={active?.label || 'idle'}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.25 }}
+          style={{ color: active ? active.color : 'rgba(167,139,250,0.35)' }}
         >
-          {/* Button border animation */}
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            style={{ border: '1px solid rgba(56,189,248,0.4)' }}
-            variants={{
-              rest: { opacity: 1 },
-              hover: { opacity: 0, scale: 1.15, transition: { duration: 0.4 } },
-            }}
-          />
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            style={{ border: '1px solid rgba(56,189,248,0.8)', opacity: 0 }}
-            variants={{
-              rest: { opacity: 0, scale: 0.9 },
-              hover: { opacity: 1, scale: 1, transition: { duration: 0.4 } },
-            }}
-          />
-          {/* Bg fill on hover */}
-          <motion.div
-            className="absolute inset-0 rounded-full bg-cyan-500/10"
-            variants={{
-              rest: { opacity: 0 },
-              hover: { opacity: 1 },
-            }}
-            transition={{ duration: 0.3 }}
-          />
-          {/* Pulse ripple */}
-          <motion.div
-            className="absolute inset-0 rounded-full border border-cyan-400/20"
-            animate={{ scale: [1, 1.6], opacity: [0.5, 0] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeOut' }}
-          />
+          {active ? `⟶ ${active.label.toUpperCase()}` : 'SELECT SIGNAL'}
+        </motion.span>
+      </AnimatePresence>
+      <span>|</span>
+      <span>51.5°N 0.1°W</span>
+    </motion.div>
+  );
+}
 
-          <motion.span
-            className="relative z-10"
-            variants={{
-              rest: { x: 0 },
-              hover: { x: -4 },
+/* ═══════════════════════════ MAIN COMPONENT ════════════════════════════ */
+export default function GetInTouch() {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const active = activeIndex !== null ? signals[activeIndex] : null;
+
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] });
+  const orbitRotate = useTransform(scrollYProgress, [0, 1], [0, 30]);
+  const sectionY = useTransform(scrollYProgress, [0, 0.5], [80, 0]);
+  const sectionOpacity = useTransform(scrollYProgress, [0, 0.15], [0, 1]);
+
+  // Mouse parallax
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const smx = useSpring(mx, { stiffness: 60, damping: 22 });
+  const smy = useSpring(my, { stiffness: 60, damping: 22 });
+  const rX = useTransform(smy, [-300, 300], [14, -14]);
+  const rY = useTransform(smx, [-300, 300], [-14, 14]);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const r = sectionRef.current?.getBoundingClientRect();
+    if (!r) return;
+    mx.set(e.clientX - r.left - r.width / 2);
+    my.set(e.clientY - r.top - r.height / 2);
+  };
+
+  const handleToggle = (i: number) => setActiveIndex(prev => (prev === i ? null : i));
+
+  return (
+    <>
+      <MagneticBlob />
+
+      <section
+        ref={sectionRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => { mx.set(0); my.set(0); }}
+        className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center px-4 py-24 sm:py-32"
+        style={{ background: '#05030f' }}
+      >
+        {/* Layered BG */}
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 90% 70% at 50% 50%, rgba(30,12,80,0.6) 0%, transparent 70%)' }} />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 50% 50% at 20% 80%, rgba(103,232,249,0.04) 0%, transparent 60%)' }} />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 50% 50% at 80% 20%, rgba(249,168,212,0.04) 0%, transparent 60%)' }} />
+        <NoiseOverlay />
+        <WarpGrid />
+
+        {/* Top marquee */}
+        <div className="absolute top-0 left-0 right-0 z-10">
+          <Marquee />
+        </div>
+
+        {/* ── HEADER ── */}
+        <motion.div
+          style={{ y: sectionY, opacity: sectionOpacity }}
+          className="relative z-10 text-center mb-10 sm:mb-16"
+        >
+          {/* Eyebrow */}
+          <motion.div
+            initial={{ opacity: 0, y: -16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-flex items-center gap-2.5 mb-5 px-4 py-1.5 rounded-full"
+            style={{
+              border: '1px solid rgba(167,139,250,0.18)',
+              background: 'rgba(167,139,250,0.04)',
+              backdropFilter: 'blur(8px)',
             }}
-            transition={{ duration: 0.3 }}
           >
-            Initiate Contact
-          </motion.span>
-          <motion.svg
-            className="relative z-10 w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-            variants={{
-              rest: { x: 0, opacity: 0.6 },
-              hover: { x: 6, opacity: 1 },
+            <motion.div
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: '#a78bfa' }}
+              animate={{ opacity: [1, 0.2, 1], scale: [1, 1.4, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <span
+              className="text-[10px] sm:text-xs tracking-[0.35em] uppercase"
+              style={{ color: 'rgba(167,139,250,0.7)', fontFamily: "'DM Mono', monospace" }}
+            >
+              Signal Receiver Active
+            </span>
+          </motion.div>
+
+          {/* Main title */}
+          <motion.div
+            initial={{ opacity: 0, y: 30, skewY: 4 }}
+            whileInView={{ opacity: 1, y: 0, skewY: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+          >
+            <h2
+              className="text-5xl sm:text-6xl md:text-8xl font-black text-white leading-[0.9] tracking-tight mb-4"
+              style={{
+                fontFamily: "'Unbounded', 'Space Grotesk', sans-serif",
+                textShadow: '0 0 80px rgba(167,139,250,0.25)',
+              }}
+            >
+              <GlitchText text="GET IN" />
+              <br />
+              <span
+                style={{
+                  WebkitTextStroke: '1px rgba(167,139,250,0.5)',
+                  color: 'transparent',
+                  display: 'inline-block',
+                }}
+              >
+                TOUCH.
+              </span>
+            </h2>
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4, duration: 0.7 }}
+            className="text-xs sm:text-sm tracking-[0.25em] uppercase"
+            style={{ color: 'rgba(167,139,250,0.35)', fontFamily: "'DM Mono', monospace" }}
+          >
+            Select your transmission type below
+          </motion.p>
+        </motion.div>
+
+        {/* ── ORBIT SYSTEM ── */}
+        <motion.div
+          style={{ perspective: 1100, rotateX: orbitRotate }}
+          className="relative z-10 mb-10 sm:mb-14"
+        >
+          <motion.div
+            className="relative flex items-center justify-center"
+            style={{
+              rotateX: rX,
+              rotateY: rY,
+              transformStyle: 'preserve-3d',
+              width: 460,
+              height: 460,
+              maxWidth: '90vw',
+              maxHeight: '90vw',
             }}
-            transition={{ duration: 0.3 }}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </motion.svg>
-        </motion.a>
-      </motion.div>
-    </section>
+            {/* Rings */}
+            <OrbitRing r={220} dur={32} dash="dashed" />
+            <OrbitRing r={200} dur={22} reverse dash="dashed" color="rgba(167,139,250,0.07)" />
+            <OrbitRing r={160} dur={16} color="rgba(103,232,249,0.05)" />
+            <OrbitRing r={140} dur={40} reverse dash="dashed" color="rgba(249,168,212,0.04)" />
+
+            {/* Connector SVG lines */}
+            <ConnectorLines activeIndex={activeIndex} />
+
+            {/* Signal cards */}
+            {signals.map((item, i) => (
+              <SignalCard
+                key={item.label}
+                item={item}
+                index={i}
+                total={signals.length}
+                isActive={activeIndex === i}
+                onClick={() => handleToggle(i)}
+              />
+            ))}
+
+            {/* Central nucleus */}
+            <Nucleus active={active} />
+          </motion.div>
+        </motion.div>
+
+        {/* ── STATUS BAR ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.8, duration: 0.8 }}
+          className="relative z-10 mb-8 sm:mb-12"
+        >
+          <StatusBar active={active} />
+        </motion.div>
+
+        {/* ── CTA BUTTON ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="relative z-10"
+        >
+          <motion.a
+            href="/contact"
+            className="group relative inline-flex items-center gap-4 px-8 sm:px-12 py-4 sm:py-5 rounded-full overflow-hidden cursor-pointer select-none"
+            style={{
+              border: '1px solid rgba(167,139,250,0.2)',
+              background: 'rgba(167,139,250,0.04)',
+              backdropFilter: 'blur(16px)',
+              fontFamily: "'DM Mono', monospace",
+            }}
+            whileHover="hover"
+            whileTap={{ scale: 0.97 }}
+          >
+            {/* Hover fill */}
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              style={{ background: 'linear-gradient(135deg, rgba(167,139,250,0.12), rgba(103,232,249,0.08))' }}
+              variants={{ hover: { opacity: 1 }, default: { opacity: 0 } }}
+              initial={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            />
+
+            {/* Shimmer */}
+            <motion.div
+              className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100"
+              style={{
+                background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.05) 50%, transparent 70%)',
+              }}
+              animate={{ x: ['-100%', '100%'] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
+            />
+
+            {/* Outer ripples */}
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              style={{ border: '1px solid rgba(167,139,250,0.15)' }}
+              animate={{ scale: [1, 1.55], opacity: [0.5, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeOut' }}
+            />
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              style={{ border: '1px solid rgba(167,139,250,0.08)' }}
+              animate={{ scale: [1, 1.9], opacity: [0.3, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeOut', delay: 0.8 }}
+            />
+
+            {/* Icon */}
+            <motion.div
+              className="relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.2)' }}
+              variants={{
+                hover: { background: 'rgba(167,139,250,0.22)', borderColor: 'rgba(167,139,250,0.5)' },
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="rgba(167,139,250,0.9)"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                variants={{ hover: { x: 3 } }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </motion.svg>
+            </motion.div>
+
+            <motion.span
+              className="relative z-10 text-sm sm:text-base font-semibold tracking-[0.2em] uppercase"
+              style={{ color: 'rgba(200,185,255,0.9)' }}
+              variants={{ hover: { color: '#fff', letterSpacing: '0.25em' } }}
+              transition={{ duration: 0.3 }}
+            >
+              Initiate Contact
+            </motion.span>
+          </motion.a>
+        </motion.div>
+
+        {/* Bottom decoration line */}
+        <motion.div
+          className="absolute bottom-0 left-0 right-0 h-px"
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(167,139,250,0.2), transparent)' }}
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.5, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        />
+
+        {/* Corner decorations */}
+        {['top-6 left-6', 'top-6 right-6', 'bottom-6 left-6', 'bottom-6 right-6'].map((pos, i) => (
+          <div key={i} className={`absolute ${pos} w-4 h-4 pointer-events-none`}>
+            <div
+              className="absolute top-0 left-0 w-full h-[1px]"
+              style={{ background: 'rgba(167,139,250,0.2)' }}
+            />
+            <div
+              className="absolute top-0 left-0 h-full w-[1px]"
+              style={{ background: 'rgba(167,139,250,0.2)' }}
+            />
+          </div>
+        ))}
+      </section>
+    </>
   );
 }

@@ -2,17 +2,45 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, ChevronDown, Send, ArrowLeft, LifeBuoy } from 'lucide-react';
+import { CheckCircle2, ChevronDown, Send, ArrowLeft, LifeBuoy, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ApplyForHelp() {
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [ticketId, setTicketId] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus('submitting');
-    // Simulate API call
-    setTimeout(() => setStatus('success'), 2000);
+    setErrorMsg('');
+
+    const form = e.currentTarget;
+    const data = {
+      name:     (form.elements.namedItem('name')     as HTMLInputElement).value,
+      email:    (form.elements.namedItem('email')    as HTMLInputElement).value,
+      category: (form.elements.namedItem('category') as HTMLSelectElement).value,
+      subject:  (form.elements.namedItem('subject')  as HTMLInputElement).value,
+      message:  (form.elements.namedItem('message')  as HTMLTextAreaElement).value,
+    };
+
+    try {
+      const res = await fetch('/api/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) throw new Error(json.error ?? 'Something went wrong.');
+
+      setTicketId(json.ticketId);
+      setStatus('success');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Unexpected error.');
+      setStatus('error');
+    }
   };
 
   const containerVariants = {
@@ -32,7 +60,7 @@ export default function ApplyForHelp() {
   if (status === 'success') {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4">
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="text-center space-y-4"
@@ -41,8 +69,13 @@ export default function ApplyForHelp() {
             <CheckCircle2 className="w-10 h-10 text-blue-500" />
           </div>
           <h2 className="text-3xl font-bold text-white">Request Received</h2>
-          <p className="text-zinc-400">We have assigned a support agent to your case. <br/> Check your email for ticket #SUP-2049.</p>
-          <Link href="/" className="inline-block mt-8 text-blue-400 hover:text-blue-300">
+          <p className="text-zinc-400">
+            We have assigned a support agent to your case.
+            <br />
+            Check your email for ticket{' '}
+            <span className="text-blue-400 font-semibold">{ticketId}</span>.
+          </p>
+          <Link href="/" className="inline-block mt-8 text-blue-400 hover:text-blue-300 transition-colors">
             Return Home
           </Link>
         </motion.div>
@@ -52,14 +85,14 @@ export default function ApplyForHelp() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden flex items-center justify-center p-4 sm:p-8">
-      
+
       {/* Background Ambience */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] right-[20%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-600/10 blur-[120px] rounded-full" />
       </div>
 
-      <motion.div 
+      <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -73,10 +106,10 @@ export default function ApplyForHelp() {
           </Link>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-500/10 rounded-lg">
-                <LifeBuoy className="w-6 h-6 text-blue-500" />
+              <LifeBuoy className="w-6 h-6 text-blue-500" />
             </div>
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-200">
-                Support Request
+              Support Request
             </h1>
           </div>
           <p className="text-zinc-400 mt-2 ml-1">
@@ -84,26 +117,40 @@ export default function ApplyForHelp() {
           </p>
         </motion.div>
 
+        {/* Error Banner */}
+        {status === 'error' && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 flex items-center gap-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 text-sm"
+          >
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {errorMsg}
+          </motion.div>
+        )}
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          
+
           {/* Row 1 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <motion.div variants={itemVariants} className="space-y-2">
               <label className="text-sm font-medium text-zinc-300">Your Name</label>
-              <input 
+              <input
                 required
-                type="text" 
+                name="name"
+                type="text"
                 placeholder="Jane Smith"
                 className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-zinc-700"
               />
             </motion.div>
-            
+
             <motion.div variants={itemVariants} className="space-y-2">
               <label className="text-sm font-medium text-zinc-300">Email Address</label>
-              <input 
+              <input
                 required
-                type="email" 
+                name="email"
+                type="email"
                 placeholder="jane@example.com"
                 className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-zinc-700"
               />
@@ -114,7 +161,10 @@ export default function ApplyForHelp() {
           <motion.div variants={itemVariants} className="space-y-2 relative">
             <label className="text-sm font-medium text-zinc-300">How can we help?</label>
             <div className="relative">
-              <select className="w-full appearance-none bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-zinc-300">
+              <select
+                name="category"
+                className="w-full appearance-none bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-zinc-300"
+              >
                 <option>General Inquiry</option>
                 <option>Billing & Subscriptions</option>
                 <option>Account Access</option>
@@ -128,19 +178,21 @@ export default function ApplyForHelp() {
           {/* Subject Line */}
           <motion.div variants={itemVariants} className="space-y-2">
             <label className="text-sm font-medium text-zinc-300">Subject</label>
-            <input 
-                required
-                type="text" 
-                placeholder="e.g. Can't access my dashboard"
-                className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-zinc-700"
+            <input
+              required
+              name="subject"
+              type="text"
+              placeholder="e.g. Can't access my dashboard"
+              className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-zinc-700"
             />
           </motion.div>
 
           {/* Description */}
           <motion.div variants={itemVariants} className="space-y-2">
             <label className="text-sm font-medium text-zinc-300">Message</label>
-            <textarea 
+            <textarea
               required
+              name="message"
               rows={4}
               placeholder="Tell us more about what you need..."
               className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-zinc-700 resize-none"
@@ -149,7 +201,8 @@ export default function ApplyForHelp() {
 
           {/* Submit Button */}
           <motion.div variants={itemVariants} className="pt-4">
-            <button 
+            <button
+              type="submit"
               disabled={status === 'submitting'}
               className="w-full group relative flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold py-4 rounded-lg shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
             >

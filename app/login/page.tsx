@@ -690,6 +690,28 @@ export default function AuthPage() {
                     )}
                   </AnimatePresence>
 
+                  {/* Forgot password — inline, right below password field */}
+                  <AnimatePresence>
+                    {mode === "signin" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex justify-end -mt-2"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => switchMode("forgot")}
+                          className="text-xs transition-all duration-200 group flex items-center gap-1"
+                          style={{ color: "#a05c4a", fontFamily: "'Lora', serif" }}
+                        >
+                          <span className="group-hover:underline underline-offset-2">Forgot password?</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <AnimatePresence>
                     {error && (
                       <motion.div

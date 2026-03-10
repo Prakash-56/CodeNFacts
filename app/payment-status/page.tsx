@@ -17,12 +17,9 @@ function PaymentStatusInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const orderId = searchParams.get("order_id");
   const courseId = searchParams.get("courseId");
 
   const [status, setStatus] = useState<"checking" | "success" | "failed">("checking");
-  // ✅ Track if verification already completed to prevent timeout overriding it
-  const [verified, setVerified] = useState(false);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -40,70 +37,81 @@ function PaymentStatusInner() {
   const fireConfetti = () => {
     const duration = 2500;
     const end = Date.now() + duration;
+
     const frame = () => {
       confetti({ particleCount: 4, angle: 60, spread: 70, origin: { x: 0 } });
       confetti({ particleCount: 4, angle: 120, spread: 70, origin: { x: 1 } });
+
       if (Date.now() < end) requestAnimationFrame(frame);
     };
+
     frame();
   };
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (!user || !orderId || !courseId) {
-        console.log("Missing data:", { user: !!user, orderId, courseId });
+      if (!user || !courseId) {
         setStatus("failed");
-        setVerified(true);
         return;
       }
 
-      try {
-        const res = await fetch("/api/verify-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId, userId: user.uid, courseId }),
-        });
+      const checkEnrollment = async () => {
+        try {
+          const res = await fetch("/api/check-enrollment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: user.uid,
+              courseId,
+            }),
+          });
 
-        const data = await res.json();
+          const data = await res.json();
 
-        // ✅ Log full response so you can debug in browser console
-        console.log("Verify payment response:", data);
+          if (data.enrolled) {
+            setStatus("success");
+            fireConfetti();
 
-        // ✅ Removed the 1500ms delay — it was pushing you over the timeout
-        setVerified(true);
+            setTimeout(() => {
+              router.push("/my-batch");
+            }, 3500);
 
-        if (data.success) {
-          setStatus("success");
-          fireConfetti();
-          setTimeout(() => router.push("/my-batch"), 3500);
-        } else {
-          console.error("Verification failed:", data);
+            return true;
+          }
+
+          return false;
+
+        } catch (error) {
+          console.error("Enrollment check error:", error);
+          return false;
+        }
+      };
+
+      let attempts = 0;
+
+      const interval = setInterval(async () => {
+        const enrolled = await checkEnrollment();
+
+        attempts++;
+
+        if (enrolled) {
+          clearInterval(interval);
+        }
+
+        if (attempts > 20) {
+          clearInterval(interval);
           setStatus("failed");
         }
-      } catch (error) {
-        console.error("Verification Error:", error);
-        setVerified(true);
-        setStatus("failed");
-      }
+
+      }, 3000);
     });
 
-    // ✅ Increased timeout from 12s to 25s — enough for slow connections
-    const timeout = setTimeout(() => {
-      if (!verified) {
-        console.warn("Verification timed out");
-        setStatus((prev) => (prev === "checking" ? "failed" : prev));
-      }
-    }, 25000);
-
-    return () => {
-      unsubscribe();
-      clearTimeout(timeout);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderId, courseId, router]);
+    return () => unsubscribe();
+  }, [courseId, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-black text-white">
+
       <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:60px_60px]" />
 
       <motion.div
@@ -111,6 +119,7 @@ function PaymentStatusInner() {
         transition={{ duration: 12, repeat: Infinity }}
         className="absolute w-[500px] h-[500px] bg-purple-600/20 blur-[140px] rounded-full top-[-150px] left-[-150px]"
       />
+
       <motion.div
         animate={{ y: [0, 80, 0] }}
         transition={{ duration: 15, repeat: Infinity }}
@@ -127,6 +136,7 @@ function PaymentStatusInner() {
         </h1>
 
         <AnimatePresence mode="wait">
+
           {status === "checking" && (
             <motion.div
               key="checking"
@@ -140,9 +150,14 @@ function PaymentStatusInner() {
                 transition={{ repeat: Infinity, duration: 1.8, ease: "linear" }}
                 className="w-20 h-20 border-4 border-cyan-400 border-t-transparent rounded-full mx-auto"
               />
-              {/* ✅ More informative loading message */}
-              <p className="text-yellow-400 text-lg">Verifying your payment...</p>
-              <p className="text-gray-500 text-xs">This may take a few seconds</p>
+
+              <p className="text-yellow-400 text-lg">
+                Confirming your payment...
+              </p>
+
+              <p className="text-gray-500 text-xs">
+                This may take a few seconds
+              </p>
             </motion.div>
           )}
 
@@ -154,11 +169,13 @@ function PaymentStatusInner() {
               className="space-y-6"
             >
               <div className="relative flex justify-center">
+
                 <motion.div
                   className="absolute w-28 h-28 rounded-full bg-green-500/20"
                   animate={{ scale: [1, 2], opacity: [0.6, 0] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
+
                 <motion.div
                   initial={{ rotate: -180 }}
                   animate={{ rotate: 0 }}
@@ -166,9 +183,17 @@ function PaymentStatusInner() {
                 >
                   🎉
                 </motion.div>
+
               </div>
-              <p className="text-green-400 text-2xl font-semibold">Welcome to the Batch!</p>
-              <p className="text-gray-300 text-sm italic">Taking you to your course content...</p>
+
+              <p className="text-green-400 text-2xl font-semibold">
+                Welcome to the Batch!
+              </p>
+
+              <p className="text-gray-300 text-sm italic">
+                Taking you to your course content...
+              </p>
+
             </motion.div>
           )}
 
@@ -186,20 +211,26 @@ function PaymentStatusInner() {
               >
                 ❌
               </motion.div>
-              <p className="text-red-400 text-xl font-semibold">Payment Verification Failed</p>
-              <p className="text-gray-400 text-xs mb-4">
-                If the amount was deducted, please contact support.
+
+              <p className="text-red-400 text-xl font-semibold">
+                Payment Confirmation Failed
               </p>
+
+              <p className="text-gray-400 text-xs mb-4">
+                If the amount was deducted, the course will unlock shortly.
+              </p>
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => router.push("/courses")}
                 className="px-6 py-3 rounded-xl bg-white text-black font-bold shadow-xl"
               >
-                Try Again
+                Go to Courses
               </motion.button>
             </motion.div>
           )}
+
         </AnimatePresence>
       </motion.div>
     </div>

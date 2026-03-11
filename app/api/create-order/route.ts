@@ -1,30 +1,56 @@
+// app/api/create-order/route.ts
+
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { userId, courseId, amount, email, phone } = await req.json();
+    const body = await req.json();
 
-    if (!userId || !courseId || !amount) {
+    const {
+      slug,
+      courseId,
+      fullName,
+      email,
+      phone,
+      amount,
+      userId
+    } = body;
+
+    if (!userId) {
       return NextResponse.json(
-        { error: "Missing required data" },
+        { success: false, message: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    if (!amount || amount <= 0) {
+      return NextResponse.json(
+        { success: false, message: "Invalid amount" },
         { status: 400 }
       );
     }
 
-    const orderId = `CNF_${Date.now()}`;
+    if (!courseId) {
+      return NextResponse.json(
+        { success: false, message: "Missing courseId" },
+        { status: 400 }
+      );
+    }
 
-    const baseUrl =
+    const cashfreeBaseUrl =
       process.env.CASHFREE_ENV === "production"
-        ? "https://api.cashfree.com/pg/orders"
-        : "https://sandbox.cashfree.com/pg/orders";
+        ? "https://api.cashfree.com"
+        : "https://sandbox.cashfree.com";
 
-    const response = await fetch(baseUrl, {
+    const orderId = `enroll_${Date.now()}`;
+
+    const response = await fetch(`${cashfreeBaseUrl}/pg/orders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-client-id": process.env.CASHFREE_CLIENT_ID!,
         "x-client-secret": process.env.CASHFREE_CLIENT_SECRET!,
-        "x-api-version": "2023-08-01",
+        "x-api-version": "2023-08-01"
       },
       body: JSON.stringify({
         order_id: orderId,
@@ -33,41 +59,47 @@ export async function POST(req: Request) {
 
         customer_details: {
           customer_id: userId,
+          customer_name: fullName || "Student",
           customer_email: email || "student@email.com",
-          customer_phone: phone || "9999999999",
+          customer_phone: phone || "9999999999"
         },
 
-        // ⭐ REQUIRED for redirect after payment
         order_meta: {
-          return_url: `https://www.codenfacts.in/payment-status?order_id=${orderId}&courseId=${courseId}`,
+          return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-status?order_id=${orderId}&courseId=${courseId}`,
+          notify_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/cashfree-webhook`
         },
 
-        // ⭐ Used by webhook later
-        order_tags: {
-          userId: userId,
-          courseId: courseId,
-        },
-      }),
+        order_note: `Course Enrollment ${slug || courseId}`
+      })
     });
 
     const data = await response.json();
 
-    console.log("Cashfree response:", data);
+    console.log("Cashfree Order Response:", data);
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: data?.message || "Cashfree order creation failed", debug: data },
-        { status: 400 }
+        {
+          success: false,
+          message: data?.message || "Failed to create order",
+          debug: data
+        },
+        { status: response.status }
       );
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json({
+      success: true,
+      order_id: data.order_id,
+      payment_session_id: data.payment_session_id,
+      cf_order_id: data.cf_order_id
+    });
 
   } catch (error) {
-    console.error("Create Order Error:", error);
+    console.error("Create order error:", error);
 
     return NextResponse.json(
-      { error: "Server error creating order" },
+      { success: false, message: "Internal server error" },
       { status: 500 }
     );
   }

@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useAnimation } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { motion, useAnimationFrame, useMotionValue } from "framer-motion";
+import { useRef } from "react";
 import { Star, ArrowUpRight } from "lucide-react";
 
 const testimonials = [
@@ -118,14 +118,13 @@ function StarRating({ rating }: { rating: number }) {
 function TestimonialCard({ student }: { student: (typeof testimonials)[0] }) {
   return (
     <div
-      className="group relative flex-shrink-0 w-[300px] sm:w-[360px] md:w-[400px]"
+      className="group relative flex-shrink-0 w-[280px] sm:w-[340px] md:w-[400px]"
       style={{ padding: "2px" }}
     >
       {/* Glowing border gradient */}
       <div className="absolute inset-0 rounded-[28px] bg-gradient-to-br from-indigo-500/40 via-transparent to-violet-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-      <div className="relative rounded-[26px] bg-[#0d0d14] border border-white/[0.07] p-7 md:p-8 h-full overflow-hidden">
-
+      <div className="relative rounded-[26px] bg-[#0d0d14] border border-white/[0.07] p-6 md:p-8 h-full overflow-hidden">
         {/* Background glow */}
         <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-all duration-700" />
 
@@ -140,7 +139,10 @@ function TestimonialCard({ student }: { student: (typeof testimonials)[0] }) {
         </div>
 
         {/* Feedback */}
-        <p className="text-[15px] text-white/70 leading-relaxed mb-7 font-light" style={{ fontFamily: "'Georgia', serif" }}>
+        <p
+          className="text-[14px] md:text-[15px] text-white/70 leading-relaxed mb-7 font-light"
+          style={{ fontFamily: "'Georgia', serif" }}
+        >
           &ldquo;{student.feedback}&rdquo;
         </p>
 
@@ -151,43 +153,73 @@ function TestimonialCard({ student }: { student: (typeof testimonials)[0] }) {
         <div className="flex items-end justify-between">
           <div>
             <StarRating rating={student.rating} />
-            <h4 className="text-white font-semibold text-[15px] mt-2 tracking-tight">
+            <h4 className="text-white font-semibold text-[14px] md:text-[15px] mt-2 tracking-tight">
               {student.name}
             </h4>
-            <p className="text-white/35 text-[12px] mt-0.5">{student.role}</p>
+            <p className="text-white/35 text-[11px] md:text-[12px] mt-0.5">
+              {student.role}
+            </p>
           </div>
 
           <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:border-indigo-500/40 transition-all duration-500">
-            <ArrowUpRight size={14} className="text-white/30 group-hover:text-indigo-300 transition-colors" />
+            <ArrowUpRight
+              size={14}
+              className="text-white/30 group-hover:text-indigo-300 transition-colors"
+            />
           </div>
         </div>
-
       </div>
     </div>
   );
 }
+
+// Card width + gap in px — must match the CSS values below
+const CARD_WIDTH = 300; // approximate average across breakpoints
+const GAP = 20;
+const ITEM_WIDTH = CARD_WIDTH + GAP;
 
 function InfiniteTrack({
   speed,
   direction = 1,
 }: {
   speed: number;
-  direction?: number;
+  direction?: 1 | -1;
 }) {
-  const duplicated = [...testimonials, ...testimonials, ...testimonials];
+  // Triple the array so we always have content to show
+  const items = [...testimonials, ...testimonials, ...testimonials];
+  const totalItems = testimonials.length; // one set length
+  const loopWidth = totalItems * ITEM_WIDTH;
+
+  const x = useMotionValue(direction === 1 ? 0 : -loopWidth);
+
+  useAnimationFrame((_, delta) => {
+    const moveBy = (speed * delta) / 1000; // px per ms → px per frame
+    let current = x.get();
+
+    if (direction === 1) {
+      // scroll left: decrease x, reset when one set has scrolled
+      current -= moveBy;
+      if (current <= -loopWidth) current += loopWidth;
+    } else {
+      // scroll right: increase x, reset when one set has scrolled
+      current += moveBy;
+      if (current >= 0) current -= loopWidth;
+    }
+
+    x.set(current);
+  });
 
   return (
     <div className="overflow-hidden relative w-full">
       <motion.div
-        className="flex gap-5 w-max"
-        animate={{ x: direction === 1 ? ["0%", "-33.33%"] : ["-33.33%", "0%"] }}
-        transition={{
-          repeat: Infinity,
-          ease: "linear",
-          duration: speed,
+        className="flex"
+        style={{
+          x,
+          gap: `${GAP}px`,
+          width: "max-content",
         }}
       >
-        {duplicated.map((student, i) => (
+        {items.map((student, i) => (
           <TestimonialCard key={i} student={student} />
         ))}
       </motion.div>
@@ -222,7 +254,6 @@ export default function PremiumTestimonialsSection() {
       <div className="absolute bottom-0 right-1/4 w-[500px] h-[400px] bg-violet-700/8 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-
         {/* Header */}
         <div className="mb-20 md:mb-28">
           <motion.div
@@ -233,20 +264,19 @@ export default function PremiumTestimonialsSection() {
             className="flex flex-col md:flex-row md:items-end md:justify-between gap-8"
           >
             <div>
-              <p
-                className="text-[11px] tracking-[0.35em] uppercase text-indigo-400/70 mb-5 font-mono"
-              >
+              <p className="text-[11px] tracking-[0.35em] uppercase text-indigo-400/70 mb-5 font-mono">
                 Student Stories
               </p>
               <h2
-                className="text-[42px] sm:text-[58px] md:text-[72px] font-black leading-[0.92] tracking-tight text-white"
+                className="text-[38px] sm:text-[58px] md:text-[72px] font-black leading-[0.92] tracking-tight text-white"
                 style={{ fontFamily: "'Georgia', serif", fontStyle: "italic" }}
               >
                 Trusted by{" "}
                 <span
                   className="relative inline-block"
                   style={{
-                    background: "linear-gradient(135deg, #a5b4fc 0%, #818cf8 50%, #c4b5fd 100%)",
+                    background:
+                      "linear-gradient(135deg, #a5b4fc 0%, #818cf8 50%, #c4b5fd 100%)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                   }}
@@ -260,7 +290,8 @@ export default function PremiumTestimonialsSection() {
 
             <div className="md:max-w-xs">
               <p className="text-white/40 text-sm leading-relaxed">
-                We don&apos;t just teach AI & Data Science. We build confident, industry-ready creators from day one.
+                We don&apos;t just teach AI & Data Science. We build confident,
+                industry-ready creators from day one.
               </p>
             </div>
           </motion.div>
@@ -280,28 +311,32 @@ export default function PremiumTestimonialsSection() {
               className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-5"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent" />
-              <p className={`text-3xl md:text-4xl font-black tracking-tight ${s.accent} mb-1`}>
+              <p
+                className={`text-3xl md:text-4xl font-black tracking-tight ${s.accent} mb-1`}
+              >
                 {s.value}
               </p>
-              <p className="text-white/30 text-[12px] tracking-wide">{s.label}</p>
+              <p className="text-white/30 text-[12px] tracking-wide">
+                {s.label}
+              </p>
             </div>
           ))}
         </motion.div>
 
-        {/* Testimonial tracks */}
+        {/* Testimonial tracks — both visible on all screen sizes */}
         <div className="space-y-5">
-          {/* Track 1 — right to left */}
+          {/* Track 1 — left to right scroll */}
           <div className="relative">
-            <InfiniteTrack speed={38} direction={1} />
-            <div className="absolute inset-y-0 left-0 w-20 md:w-40 bg-gradient-to-r from-[#07070f] to-transparent pointer-events-none z-10" />
-            <div className="absolute inset-y-0 right-0 w-20 md:w-40 bg-gradient-to-l from-[#07070f] to-transparent pointer-events-none z-10" />
+            <InfiniteTrack speed={80} direction={1} />
+            <div className="absolute inset-y-0 left-0 w-12 sm:w-20 md:w-40 bg-gradient-to-r from-[#07070f] to-transparent pointer-events-none z-10" />
+            <div className="absolute inset-y-0 right-0 w-12 sm:w-20 md:w-40 bg-gradient-to-l from-[#07070f] to-transparent pointer-events-none z-10" />
           </div>
 
-          {/* Track 2 — left to right (reverse) */}
-          <div className="relative hidden sm:block">
-            <InfiniteTrack speed={46} direction={-1} />
-            <div className="absolute inset-y-0 left-0 w-20 md:w-40 bg-gradient-to-r from-[#07070f] to-transparent pointer-events-none z-10" />
-            <div className="absolute inset-y-0 right-0 w-20 md:w-40 bg-gradient-to-l from-[#07070f] to-transparent pointer-events-none z-10" />
+          {/* Track 2 — right to left scroll (reverse) — visible on ALL sizes */}
+          <div className="relative">
+            <InfiniteTrack speed={65} direction={-1} />
+            <div className="absolute inset-y-0 left-0 w-12 sm:w-20 md:w-40 bg-gradient-to-r from-[#07070f] to-transparent pointer-events-none z-10" />
+            <div className="absolute inset-y-0 right-0 w-12 sm:w-20 md:w-40 bg-gradient-to-l from-[#07070f] to-transparent pointer-events-none z-10" />
           </div>
         </div>
 
@@ -327,16 +362,19 @@ export default function PremiumTestimonialsSection() {
               className="text-xl md:text-2xl lg:text-3xl text-white/80 leading-relaxed font-light"
               style={{ fontFamily: "'Georgia', serif", fontStyle: "italic" }}
             >
-              We don&apos;t just teach AI & Data Science. We build confident, industry-ready creators who can solve real-world problems from day one.
+              We don&apos;t just teach AI & Data Science. We build confident,
+              industry-ready creators who can solve real-world problems from day
+              one.
             </p>
             <div className="mt-8 flex items-center justify-center gap-3">
               <div className="h-px w-12 bg-indigo-500/40" />
-              <span className="text-indigo-400/70 text-xs tracking-[0.25em] uppercase font-mono">CodeNFacts</span>
+              <span className="text-indigo-400/70 text-xs tracking-[0.25em] uppercase font-mono">
+                CodeNFacts
+              </span>
               <div className="h-px w-12 bg-indigo-500/40" />
             </div>
           </div>
         </motion.div>
-
       </div>
     </section>
   );

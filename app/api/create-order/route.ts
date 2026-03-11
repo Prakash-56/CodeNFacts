@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         order_id: orderId,
-        order_amount: amount,
+        order_amount: Number(amount),
         order_currency: "INR",
 
         customer_details: {
@@ -37,7 +37,12 @@ export async function POST(req: Request) {
           customer_phone: phone || "9999999999",
         },
 
-        // VERY IMPORTANT for webhook
+        // ⭐ REQUIRED for redirect after payment
+        order_meta: {
+          return_url: `https://www.codenfacts.in/payment-status?order_id=${orderId}&courseId=${courseId}`,
+        },
+
+        // ⭐ Used by webhook later
         order_tags: {
           userId: userId,
           courseId: courseId,
@@ -47,11 +52,11 @@ export async function POST(req: Request) {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      console.error("Cashfree error:", data);
+    console.log("Cashfree response:", data);
 
+    if (!response.ok) {
       return NextResponse.json(
-        { error: data?.message || "Cashfree order creation failed" },
+        { error: data?.message || "Cashfree order creation failed", debug: data },
         { status: 400 }
       );
     }

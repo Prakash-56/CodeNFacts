@@ -6,22 +6,21 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    console.log("Cashfree Webhook:", JSON.stringify(body));
+    console.log("Cashfree Webhook Received:", JSON.stringify(body));
 
-    const eventType = body.type;
+    const eventType = body?.type;
 
+    // Ignore other events but still return 200
     if (eventType !== "PAYMENT_SUCCESS_WEBHOOK") {
-      return NextResponse.json({ received: true });
+      return NextResponse.json({ received: true }, { status: 200 });
     }
 
     const payment = body?.data?.payment;
     const order = body?.data?.order;
 
     if (!payment || !order) {
-      return NextResponse.json(
-        { success: false, message: "Invalid webhook payload" },
-        { status: 400 }
-      );
+      console.error("Invalid webhook payload");
+      return NextResponse.json({ received: true }, { status: 200 });
     }
 
     const orderId = payment.order_id;
@@ -33,27 +32,21 @@ export async function POST(req: Request) {
     const courseId = order?.order_tags?.courseId;
 
     if (!userId || !courseId) {
-      return NextResponse.json(
-        { success: false, message: "Missing order tags" },
-        { status: 400 }
-      );
+      console.error("Missing order_tags");
+      return NextResponse.json({ received: true }, { status: 200 });
     }
 
     const purchaseId = `${userId}_${courseId}`;
 
-    const existingPurchase = await db
-      .collection("purchases")
-      .doc(purchaseId)
-      .get();
+    const purchaseRef = db.collection("purchases").doc(purchaseId);
+    const existingPurchase = await purchaseRef.get();
 
     if (existingPurchase.exists) {
-      return NextResponse.json({
-        success: true,
-        message: "Purchase already recorded",
-      });
+      console.log("Purchase already exists:", purchaseId);
+      return NextResponse.json({ received: true }, { status: 200 });
     }
 
-    await db.collection("purchases").doc(purchaseId).set({
+    await purchaseRef.set({
       userId,
       courseId,
       orderId,
@@ -70,17 +63,14 @@ export async function POST(req: Request) {
       { merge: true }
     );
 
-    return NextResponse.json({
-      success: true,
-      message: "Course unlocked via webhook",
-    });
+    console.log("Course unlocked:", purchaseId);
+
+    return NextResponse.json({ received: true }, { status: 200 });
 
   } catch (error) {
     console.error("Webhook Error:", error);
 
-    return NextResponse.json(
-      { success: false, message: "Webhook server error" },
-      { status: 500 }
-    );
+    // Always return 200 so Cashfree doesn't retry endlessly
+    return NextResponse.json({ received: true }, { status: 200 });
   }
 }

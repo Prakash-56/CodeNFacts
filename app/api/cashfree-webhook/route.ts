@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
-    const orderId = payment.order_id;
+    const orderId = order.order_id;
     const paymentId = payment.cf_payment_id;
     const amount = payment.payment_amount;
 

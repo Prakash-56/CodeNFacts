@@ -10,7 +10,6 @@ export async function POST(req: Request) {
 
     const eventType = body?.type;
 
-    // Ignore other events but still return 200
     if (eventType !== "PAYMENT_SUCCESS_WEBHOOK") {
       return NextResponse.json({ received: true }, { status: 200 });
     }
@@ -23,10 +22,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
+    if (payment.payment_status !== "SUCCESS") {
+      console.log("Payment not successful");
+      return NextResponse.json({ received: true }, { status: 200 });
+    }
+
     const orderId = payment.order_id;
     const paymentId = payment.cf_payment_id;
     const amount = payment.payment_amount;
-    const status = payment.payment_status;
 
     const userId = order?.order_tags?.userId;
     const courseId = order?.order_tags?.courseId;
@@ -52,8 +55,8 @@ export async function POST(req: Request) {
       orderId,
       paymentId,
       amount,
-      status,
-      createdAt: new Date(),
+      status: "SUCCESS",
+      createdAt: FieldValue.serverTimestamp(),
     });
 
     await db.collection("users").doc(userId).set(
@@ -68,9 +71,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true }, { status: 200 });
 
   } catch (error) {
-    console.error("Webhook Error:", error);
+    console.error("Webhook Error:", JSON.stringify(error));
 
-    // Always return 200 so Cashfree doesn't retry endlessly
     return NextResponse.json({ received: true }, { status: 200 });
   }
 }

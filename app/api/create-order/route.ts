@@ -68,6 +68,11 @@ export async function POST(req: Request) {
           return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-status?order_id=${orderId}&courseId=${courseId}`,
           notify_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/cashfree-webhook`
         },
+        order_tags: {
+          userId: userId,
+          courseId: courseId
+        },
+
 
         order_note: `Course Enrollment ${slug || courseId}`
       })

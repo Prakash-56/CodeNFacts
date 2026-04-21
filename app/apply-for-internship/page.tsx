@@ -6,13 +6,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 const INTERNSHIPS = [
   {
     id: "int-fe",
-    badge: "PAID · REMOTE",
+    badge: "UNPAID · REMOTE",
     title: "Frontend Engineer Intern",
     dept: "Engineering",
     tagline: "Ship features used by thousands",
     stack: ["React", "Tailwind", "TypeScript", "Figma"],
     duration: "3 months",
-    stipend: "₹6,000/mo",
+    stipend: "SKILL DEV/CERTIFICATE",
     seats: 12,
     seatsLeft: 4,
     accent: "#0AFF94",
@@ -25,13 +25,13 @@ const INTERNSHIPS = [
   },
   {
     id: "int-be",
-    badge: "PAID · REMOTE",
+    badge: "UNPAID · REMOTE",
     title: "Backend Engineer Intern",
     dept: "Engineering",
     tagline: "APIs that don't fall over at 3AM",
     stack: ["Node.js", "PostgreSQL", "Redis", "AWS"],
     duration: "3 months",
-    stipend: "₹8,000/mo",
+    stipend: "SKILL DEV/CERTIFICATE",
     seats: 10,
     seatsLeft: 3,
     accent: "#FF5C38",
@@ -44,13 +44,13 @@ const INTERNSHIPS = [
   },
   {
     id: "int-ai",
-    badge: "PAID · HYBRID",
+    badge: "UNPAID · HYBRID",
     title: "AI Research Intern",
     dept: "Research",
     tagline: "Papers don't write themselves",
     stack: ["Python", "PyTorch", "Jupyter", "LaTeX"],
     duration: "4 months",
-    stipend: "₹10,000/mo",
+    stipend: "SKILL DEV/CERTIFICATE",
     seats: 6,
     seatsLeft: 2,
     accent: "#C084FC",
@@ -63,13 +63,13 @@ const INTERNSHIPS = [
   },
   {
     id: "int-devops",
-    badge: "PAID · REMOTE",
+    badge: "UNPAID · REMOTE",
     title: "DevOps / Cloud Intern",
     dept: "Infrastructure",
     tagline: "Own the pipes, own the power",
     stack: ["AWS", "Docker", "Kubernetes", "Terraform"],
     duration: "3 months",
-    stipend: "₹7,500/mo",
+    stipend: "SKILL DEV/CERTIFICATE",
     seats: 8,
     seatsLeft: 5,
     accent: "#38BDF8",
@@ -88,7 +88,7 @@ const INTERNSHIPS = [
     tagline: "Build what people actually want",
     stack: ["Notion", "Figma", "Analytics", "Jira"],
     duration: "2 months",
-    stipend: "Equity / Certificate",
+    stipend: "SKILL DEV / Certificate",
     seats: 5,
     seatsLeft: 2,
     accent: "#FACC15",
@@ -101,13 +101,13 @@ const INTERNSHIPS = [
   },
   {
     id: "int-design",
-    badge: "PAID · REMOTE",
+    badge: "UNPAID · REMOTE",
     title: "UI/UX Design Intern",
     dept: "Design",
     tagline: "Make it beautiful and usable",
     stack: ["Figma", "Framer", "Principle", "Lottie"],
     duration: "3 months",
-    stipend: "₹7,000/mo",
+    stipend: "SKILL DEV/CERTIFICATE",
     seats: 6,
     seatsLeft: 3,
     accent: "#FB7185",
@@ -125,8 +125,8 @@ const INTERNSHIPS = [
   dept: "AI / ML",
   tagline: "Train models that actually work in prod",
   stack: ["Python", "PyTorch", "Scikit-learn", "Pandas", "HuggingFace"],
-  duration: "4 months",
-  stipend: "EQUTY/CERTIFICATE",
+  duration: "1 months",
+  stipend: "SKILL DEV/CERTIFICATE",
   seats: 8,
   seatsLeft: 3,
   accent: "#F97316",
@@ -149,13 +149,13 @@ const INTERNSHIPS = [
 },
 {
   id: "int-da",
-  badge: "PAID · REMOTE",
+  badge: "UNPAID · REMOTE",
   title: "Data Analysis Intern",
   dept: "Data",
   tagline: "Turn messy data into sharp decisions",
   stack: ["Python", "SQL", "Pandas", "Tableau", "Excel"],
   duration: "3 months",
-  stipend: "₹7,000/mo",
+  stipend: "SKILL DEV/CERTIFICATE",
   seats: 10,
   seatsLeft: 6,
   accent: "#2DD4BF",
@@ -568,10 +568,10 @@ export default function InternPage() {
 
           <p style={{ fontSize: 9, letterSpacing: 5, color: "#0AFF94", fontFamily: "var(--cnf-mono)", marginBottom: 26, opacity: ready ? 1 : 0, transition: "opacity 0.7s" }}>[ CodeNFacts / Internships / 2026 Cohort ]</p>
 
-          {["INTERN WITH", "US."].map((word, wi) => (
+          {["INTERN WITH us", "US."].map((word, wi) => (
             <div key={word} style={{ overflow: "hidden" }}>
               <h1 className="cnf-h1" style={{ fontFamily: "var(--cnf-display)", fontSize: "clamp(68px,10.5vw,140px)", lineHeight: 0.9, letterSpacing: 3, color: wi === 0 ? "#fff" : "transparent", WebkitTextStroke: wi === 1 ? "1px #1c1c1c" : undefined, marginBottom: wi === 0 ? 6 : 44, animation: ready ? `cnf-heroWord 0.95s cubic-bezier(0.22,1,0.36,1) ${0.08 + wi * 0.18}s both` : "none" }}>
-                {wi === 1 ? <>US<span style={{ color: "#0AFF9", WebkitTextStroke: "0px" }}>.</span></> : word}
+                {wi === 1 ? <><span style={{ color: "#0AFF9", WebkitTextStroke: "0px" }}></span></> : word}
               </h1>
             </div>
           ))}
@@ -583,7 +583,7 @@ export default function InternPage() {
           </p>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", opacity: ready ? 1 : 0, transition: "opacity 0.9s 0.9s" }}>
-            {[{ label: "6 Open Roles", accent: "#0AFF94" }, { label: "₹7K-10K/mo Stipend", accent: "#FACC15" }, { label: "Remote & Hybrid", accent: "#38BDF8" }, { label: "Full-time Path", accent: "#C084FC" }].map(tag => (
+            {[{ label: "CSoC", accent: "#0AFF94" }, { label: "Summer Of Code", accent: "#FACC15" }, { label: "Remote & Hybrid", accent: "#38BDF8" }, { label: "Full-time Path", accent: "#C084FC" }].map(tag => (
               <span key={tag.label} style={{ fontSize: 9, letterSpacing: 2, color: tag.accent, border: `1px solid ${tag.accent}22`, padding: "5px 12px", fontFamily: "var(--cnf-mono)", background: `${tag.accent}08` }}>{tag.label}</span>
             ))}
           </div>

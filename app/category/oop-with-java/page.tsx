@@ -1593,7 +1593,7 @@ System.out.println(p1.equals(p2)); // true`}
             className="text-sm mb-6 max-w-md mx-auto"
             style={{ color: "var(--text-secondary)" }}
           >
-            Everything on this page — pillars, diagrams, cheat sheet, roadmap —
+            Everything on this page - pillars, diagrams, cheat sheet, roadmap -
             bundled into one file you can revisit anytime.
           </p>
           <div className="flex justify-center">

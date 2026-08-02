@@ -40,7 +40,7 @@
     "sql.js": "^1.14.1",
     "tailwind-merge": "^3.4.0",
     "three": "^0.182.0",
-    "three-mesh-bvh": "^0.8.0",
+    "three-mesh-bvh": "^0.9.14",
     "zustand": "^5.0.11"
   },
   "devDependencies": {

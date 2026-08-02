@@ -1,165 +1,107 @@
-import './globals.css';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import PageTransition from './components/PageTransition';
-import Script from 'next/script';
-import type { Metadata } from 'next';
+import "./globals.css";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import PageTransition from "./components/PageTransition";
+import Script from "next/script";
+import type { Metadata } from "next";
+import { AuthProvider } from "@/lib/auth-context";
+import { ThemeProvider } from "next-themes";
 
 export const metadata: Metadata = {
-  // ─────────────────────────────────────────────
-  // TITLE
-  // ─────────────────────────────────────────────
   title: {
-    default: "CodeNFacts | AI, Data Science, DSA & Placement Preparation Courses",
+    default:
+      "CodeNFacts | AI, Data Science, DSA, Coding Problems, Quizzes & Placement Prep",
     template: "%s | CodeNFacts",
   },
 
-  // ─────────────────────────────────────────────
-  // DESCRIPTION  (140–160 chars ideal)
-  // ─────────────────────────────────────────────
   description:
-    "CodeNFacts offers industry-ready courses in AI & ML, Data Science, DSA, Web Development, and Placement Preparation. Learn with real-world projects, mentorship, and structured roadmaps. Start free today.",
+    "CodeNFacts is your complete coding platform: 3000+ coding problems, quizzes, concepts, notes, full course lessons, real-world projects, community, internships, logic building & brain development. Master AI & ML, Data Science, DSA, Web Development, and crack placements with structured roadmaps. All major programming languages covered. Start free today.",
 
-  // ─────────────────────────────────────────────
-  // KEYWORDS  (grouped by topic)
-  // ─────────────────────────────────────────────
   keywords: [
-    // Brand
     "CodeNFacts",
     "codenfacts",
     "Code N Facts",
+    "coding",
+    "code",
     "code facts",
-    "Code Facts",
-    "codenfacts.in",
-
-    // AI & ML
+    "coding problems",
+    "3000+ coding questions",
+    "coding quizzes",
+    "programming quizzes",
+    "coding concepts",
+    "programming notes",
+    "course lessons",
+    "online coding courses",
+    "coding projects",
+    "real world projects",
+    "coding community",
+    "internship",
+    "coding internship",
+    "logic building",
+    "brain development coding",
+    "problem solving skills",
     "AI course",
+    "ML course",
     "machine learning course",
     "AI and ML course",
-    "complete AI course",
-    "complete machine learning course",
-    "master AI ML",
-    "artificial intelligence for beginners",
-    "deep learning course",
-    "neural networks course",
-    "NLP course",
-    "computer vision course",
-    "generative AI course",
-    "prompt engineering",
-    "LLM course",
-
-    // Data Science
     "data science course",
-    "complete data science course",
-    "data science for beginners",
-    "data analysis course",
-    "data science with Python",
-    "pandas course",
-    "numpy course",
-    "data visualization course",
-    "Power BI course",
-    "Tableau course",
-    "SQL for data science",
-    "statistics for data science",
-
-    // DSA & CS Fundamentals
     "DSA course",
     "data structures and algorithms",
-    "DSA in Python",
-    "DSA in Java",
-    "DSA in C++",
-    "competitive programming",
-    "leetcode preparation",
-    "problem solving course",
-    "algorithm design",
-
-    // Programming Languages
     "Python programming course",
     "Java course",
-    "complete Java course",
-    "C programming course",
     "C++ course",
     "JavaScript course",
     "TypeScript course",
-    "programming for beginners",
-    "learn coding",
-    "coding for beginners",
-    "online coding classes",
-
-    // Web Development
+    "C programming",
+    "Go programming",
+    "Rust programming",
     "web development course",
-    "HTML CSS course",
     "React course",
     "Next.js course",
-    "full stack development",
-    "frontend development",
-    "backend development",
     "MERN stack course",
-
-    // Placement & Career
+    "full stack development",
     "placement preparation",
     "coding interview preparation",
     "software engineering interview",
-    "interview preparation",
-    "placement course India",
-    "campus placement preparation",
-    "get placed in tech company",
-    "resume building for freshers",
-    "mock interview",
-    "tech interview tips",
-    "FAANG preparation",
-    "product based company preparation",
-
-    // Internship
-    "codenfacts internship",
-    "CodeNFacts Internship",
-    "internship",
-    "data science internship",
-    "AI ML internship",
-    "software development internship",
-    "online internship India",
-
-    // Platform
     "online coding platform",
-    "online learning platform India",
-    "programming tutorials",
-    "coding tutorials",
-    "free coding resources",
-    "online c compiler",
-    "coding bootcamp India",
-    "upskilling platform",
-    "tech career roadmap",
+    "learn coding",
+    "coding for beginners",
+    "practice coding online",
+    "competitive programming",
+    "interview questions",
+    "coding notes",
+    "tech community",
   ],
 
-  // ─────────────────────────────────────────────
-  // BASE & CANONICAL
-  // ─────────────────────────────────────────────
   metadataBase: new URL("https://codenfacts.in"),
 
   alternates: {
     canonical: "/",
   },
 
-  // ─────────────────────────────────────────────
-  // ICONS
-  // ─────────────────────────────────────────────
   icons: {
     icon: [
       { url: "/favicon.ico" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      {
+        url: "/favicon-16x16.png",
+        sizes: "16x16",
+        type: "image/png",
+      },
+      {
+        url: "/favicon-32x32.png",
+        sizes: "32x32",
+        type: "image/png",
+      },
     ],
     shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
 
-  // ─────────────────────────────────────────────
-  // OPEN GRAPH
-  // ─────────────────────────────────────────────
   openGraph: {
-    title: "CodeNFacts | AI, Data Science, DSA & Placement Preparation Courses",
+    title:
+      "CodeNFacts | 3000+ Coding Problems, AI, DSA, Quizzes, Projects & Placement Prep",
     description:
-      "Master AI & ML, Data Science, DSA, Web Development, and crack placement interviews with CodeNFacts. Real projects. Expert mentorship. Industry-ready skills.",
+      "Master coding with 3000+ problems, quizzes, concepts, notes, full lessons, projects, community & internships. Learn AI, ML, Data Science, DSA, Web Dev and crack placements at CodeNFacts.",
     url: "https://codenfacts.in",
     siteName: "CodeNFacts",
     images: [
@@ -167,29 +109,24 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "CodeNFacts - AI, Data Science & Placement Preparation Courses",
+        alt: "CodeNFacts - Coding Problems, Courses, Quizzes & Placement Preparation",
       },
     ],
     locale: "en_IN",
     type: "website",
   },
 
-  // ─────────────────────────────────────────────
-  // TWITTER / X
-  // ─────────────────────────────────────────────
   twitter: {
     card: "summary_large_image",
-    title: "CodeNFacts | AI, Data Science, DSA & Placement Preparation",
+    title:
+      "CodeNFacts | 3000+ Coding Problems, AI, DSA, Quizzes & Placement Prep",
     description:
-      "Learn AI, ML, Data Science, DSA and crack placement interviews with structured courses and real-world projects at CodeNFacts.",
+      "Practice 3000+ coding questions, take quizzes, learn concepts & notes, build projects, join the community and prepare for internships & placements with CodeNFacts.",
     images: ["/og-image.png"],
     site: "@codenfacts",
     creator: "@codenfacts",
   },
 
-  // ─────────────────────────────────────────────
-  // ROBOTS & INDEXING
-  // ─────────────────────────────────────────────
   robots: {
     index: true,
     follow: true,
@@ -202,15 +139,19 @@ export const metadata: Metadata = {
     },
   },
 
-
-  // ─────────────────────────────────────────────
-  // ADDITIONAL META
-  // ─────────────────────────────────────────────
   category: "education",
   creator: "CodeNFacts",
   publisher: "CodeNFacts",
-  authors: [{ name: "CodeNFacts Team", url: "https://codenfacts.in" }],
+
+  authors: [
+    {
+      name: "CodeNFacts Team",
+      url: "https://codenfacts.in",
+    },
+  ],
+
   applicationName: "CodeNFacts",
+
   referrer: "origin-when-cross-origin",
 };
 
@@ -220,9 +161,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        {/* ── Structured Data: Organization ── */}
+        {/* Organization */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -246,7 +187,7 @@ export default function RootLayout({
           }}
         />
 
-        {/* ── Structured Data: EducationalOrganization ── */}
+        {/* Educational Organization */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -255,7 +196,7 @@ export default function RootLayout({
               "@type": "EducationalOrganization",
               name: "CodeNFacts",
               description:
-                "CodeNFacts provides industry-ready AI, Data Science, DSA, and Placement Preparation courses with real-world projects and mentorship.",
+                "CodeNFacts is a complete coding education platform offering 3000+ coding problems, quizzes, concepts, notes, full course lessons, real-world projects, community, internships, logic building, and placement preparation across AI, Data Science, DSA, Web Development and all major programming languages.",
               url: "https://codenfacts.in",
               logo: "https://codenfacts.in/logo.png",
               address: {
@@ -266,7 +207,7 @@ export default function RootLayout({
           }}
         />
 
-        {/* ── Structured Data: WebSite + Sitelinks Searchbox ── */}
+        {/* Website + SearchAction */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -287,18 +228,98 @@ export default function RootLayout({
             }),
           }}
         />
+
+        {/* LearningResource / Course aggregate for richer SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "ItemList",
+              name: "CodeNFacts Learning Resources",
+              description:
+                "Coding problems, quizzes, concepts, notes, course lessons, projects, community and internship preparation on CodeNFacts",
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: "3000+ Coding Problems & Questions",
+                  url: "https://codenfacts.in",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: "Coding Quizzes & Practice",
+                  url: "https://codenfacts.in",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 3,
+                  name: "Programming Concepts & Notes",
+                  url: "https://codenfacts.in",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 4,
+                  name: "Full Course Lessons (AI, DSA, Web Dev & more)",
+                  url: "https://codenfacts.in",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 5,
+                  name: "Real-World Projects",
+                  url: "https://codenfacts.in",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 6,
+                  name: "Community & Logic Building",
+                  url: "https://codenfacts.in",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 7,
+                  name: "Internships & Placement Preparation",
+                  url: "https://codenfacts.in",
+                },
+              ],
+            }),
+          }}
+        />
       </head>
 
-      <body className="antialiased bg-black text-white">
-        {/* Cashfree Payment SDK */}
-        <Script
-          src="https://sdk.cashfree.com/js/v3/cashfree.js"
-          strategy="afterInteractive"
-        />
+      <body
+        className="
+          min-h-screen
+          bg-white
+          text-slate-900
+          antialiased
+          transition-colors
+          duration-300
+          dark:bg-slate-950
+          dark:text-white
+        "
+      >
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {/* Cashfree Payment SDK */}
+            <Script
+              src="https://sdk.cashfree.com/js/v3/cashfree.js"
+              strategy="afterInteractive"
+            />
 
-        <Header />
-        <PageTransition>{children}</PageTransition>
-        <Footer />
+            <Header />
+
+            <PageTransition>{children}</PageTransition>
+
+            <Footer />
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

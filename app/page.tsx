@@ -1,62 +1,30 @@
 import Hero from "./components/Hero";
-import TrustStrip from "./components/TrustStrip";
-import WhatWeOffer from "./components/WhatWeOffer";
-import WhyCodeNFacts from "./components/WhyCodeNFacts";
-import BuiltForCoders from "./components/BuiltForCoders";
-import AdvancedCoderBackground from "./components/AdvancedCoderBackground";
-import Projects from "./components/Projects";
-import CoursesOverview from "./components/CoursesOverview";
-import DataAIDetails from "./components/DataAIDetails";
-import Points from "./components/Points";
-import GetInTouch from "./components/GetInTouch";
-import CodingChallenges from "./components/CodingChallenges";
-import WhatWeHelp from "./components/WhatWeHelp";
-import WhyNeedUs from "./components/WhyNeedUs";
-import Motivate from "./components/Motivate"
-import JoinCommunity from "./components/JoinCommunity";
-import Testimonial from "./components/Testimonial"
-import Mindset from "./components/Mindset"
-import CertificatePreview from "./components/CertificatePreview";
-import HappyLearners from "./components/HappyLearners";
-import MentorshipSection from "./components/MentorShip";
-import CodeNFactsAdvantage from "./components/CodeNFactsAdvantage";
-import HaveAQuestion from "./components/HaveAQuestion";
-import Insightful from "./components/Insightful"
-import GetNotes from "./components/GetNotes";
-import Issue from "./components/Issue";
+import Coding from "./components/Coding";
+import WanttolearnfromAi from "./components/WanttolearnfromAi";
+import MasterDsaTopics from "./components/Masterdsatopics";
+import AllCodingProblems from "./components/AllCodingProblems";
+import StartCodingInSeconds from "./components/Startcodinginseconds";
+import TutorialsLibrary from "./components/TutorialsLibrary";
+import Developer from "./components/Developer";
 import Help from "./components/Help";
+import LearningRoadmap from "./components/Learningroadmap";
+
+
 
 export default function Home() {
   return (
     <>
       <Hero />
-      <TrustStrip />
-      <WhatWeOffer/>
-      <WhyCodeNFacts/>
-      <BuiltForCoders/>
-      <AdvancedCoderBackground/>
-      <Projects/>
-      <CoursesOverview/>
-      <DataAIDetails/>
-      <Points/>
-      <GetInTouch/>
-      <CodingChallenges/>
-      <WhatWeHelp/>
-      <WhyNeedUs/>
-      <Motivate/>
-      <JoinCommunity/>
-      <Testimonial/>
-      <Mindset/>
-      <CertificatePreview/>
-      <HappyLearners/>
-      <MentorshipSection/>
-      <CodeNFactsAdvantage/>
-      <HaveAQuestion/>
-      <Insightful/>
-      <GetNotes/>
-      <Issue/>
+      <Coding/>
+      <WanttolearnfromAi/>
+      <MasterDsaTopics/>
+      <AllCodingProblems/>
+      <StartCodingInSeconds/>
+      <TutorialsLibrary/>
+      <Developer/>
       <Help/>
-      {/* Next sections: Courses, About, etc */}
+      <LearningRoadmap/>
+      
     </>
   );
 }
